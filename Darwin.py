@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from operator import itemgetter
 import MLP
 import numpy as np
 
@@ -32,11 +33,10 @@ class Darwin(ABC):
 			to produce two new individuals '''
 
 		mask = np.random.randint(0, 2, size = len(ind1))
-		print ("Mask: " + str(mask))
 		new1 = []
 		new2 = []
-		i = 0
-		for bit in mask:
+		#i = 0
+		for i,bit in enumerate(mask):
 
 			if bit == 0:
 				new1.append(ind1[i])
@@ -46,7 +46,7 @@ class Darwin(ABC):
 				new1.append(ind2[i])
 				new2.append(ind1[i])
 
-			i+=1
+			#i+=1
 
 		return new1, new2
 
@@ -54,12 +54,31 @@ class Darwin(ABC):
 		''' Using 0-1 loss, test the fitness of an individual 
 			in the population '''
 
-		pass
+		return individual[0] + individual[1] #Change this to 0-1 loss
 
-	def replace(self):
-		''' Replace an indiviual back into the population '''
+	def replace(self, offspring, method):
+		''' Given the current population, the offspring, and the 
+			method for replacement, create the new population '''
 
-		pass
+		if method == "fittest":
+			#Select the n fittest from both population and offspring
+			n = len(self.population)
+			pool = self.population + offspring
+			pool_fitness = []
+
+			for individual in pool:
+				pool_fitness.append((individual, self.fitness(individual)))
+
+			pool_fitness = sorted(pool_fitness, key=itemgetter(1))
+			self.population = [ind[0] for ind in pool_fitness[:n:-1]]
+
+		elif method == "generational":
+			#Replace the old generation with the new
+			self.population = offspring
+
+		elif method == "steady":
+			#Replace some parents and some offspring
+			pass
 
 	def _create_population(self):
 		''' Create the initial population to be evolved. '''
