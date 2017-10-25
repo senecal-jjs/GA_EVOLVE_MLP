@@ -20,7 +20,7 @@ trial_run = namedtuple('trial_run', ['inputs', 'solution'])
 class network:
     # To create a MLP network provide the neurons desired for each layer, along with the activation function that
     # will be used in the hidden layer neurons
-    def __init__(self, neurons_per_layer, activation_function):
+    def __init__(self, neurons_per_layer, activation_function, problem_type):
         self.layers = []
         self.num_layers = len(neurons_per_layer)
 
@@ -35,7 +35,11 @@ class network:
                 self.layers.append(Layer.layer([neurons_per_layer[i] + 1, neurons_per_layer[i + 1]], activation_function))
 
         # Create output layer, with linear output as the activation function
-        self.layers.append(Layer.layer([neurons_per_layer[-1], None], "softmax", output_layer=True))
+        if problem_type == "classification":
+            self.layers.append(Layer.layer([neurons_per_layer[-1], None], "softmax", output_layer=True))
+        else:
+            self.layers.append(Layer.layer([neurons_per_layer[-1], None], "linear", output_layer=True))
+
         self.previous_weight_change = [np.zeros(l.weights.shape) for l in self.layers[:-1]]
 
     # Given a set of inputs to the input layer, calculate the output of each layer in the network

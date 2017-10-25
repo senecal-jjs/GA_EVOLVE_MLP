@@ -101,20 +101,30 @@ class build_GA_Menu(Frame):
         self.w = OptionMenu(self, self.update_method, *options)
         self.w.grid(row=4, column=3)
 
+        # Problem type
+        problemLabel = Label(self, text="Problem Type")
+        problemLabel.grid(row=5, column=2)
+        options = ["classification", "regression"]
+        self.problem = StringVar(self.master)
+        self.problem.set("            ")
+
+        self.x = OptionMenu(self, self.problem, *options)
+        self.x.grid(row=5, column=3)
+
         # Check box if the user wants to incorporate momentum in the weight updates
         self.use_momentum = ttk.Checkbutton(self, text="Momentum")
-        self.use_momentum.grid(row=5, column=2)
+        self.use_momentum.grid(row=6, column=2)
 
         # Beta value for momentum term in weight update
         beta_label = Label(self, text="Beta (if momentum selected)")
-        beta_label.grid(row=6, column=2)
+        beta_label.grid(row=7, column=2)
 
         self.beta = Entry(self)
-        self.beta.grid(row=6, column=3)
+        self.beta.grid(row=7, column=3)
 
         # Button to build and start running network
         build = Button(self, text="Build and Run!", command=self.build_net)
-        build.grid(row=7, column=3)
+        build.grid(row=8, column=3)
 
     # Using GUI inputs initialize the network structure
     def build_net(self):
@@ -125,8 +135,9 @@ class build_GA_Menu(Frame):
             layer_structure.append(int(layer))
 
         layer_structure.append(len(self.label_dict))
-        net = MLP.network(layer_structure, self.actFunc.get())
+        net = MLP.network(layer_structure, self.actFunc.get(), self.problem.get())
 
+        # Run the network
         self.run(net)
 
     # Load data from UCI repository and convert it to list of tuples(inputs, solution)
@@ -161,11 +172,11 @@ class build_GA_Menu(Frame):
         print(self.label_dict)
 
     # Run network with parameters from GUI, print results of test data set
-    # Right now the test/training split is hard coded for the 'Iris' dataset from UCI
     def run(self, net):
         learning = float(self.learningRate.get())
-        self.training_data = self.data[0:100]
-        testing_data = self.data[100:-1]
+        training_number = int(len(self.data)*0.66)
+        self.training_data = self.data[0:training_number]
+        testing_data = self.data[training_number:-1]
 
         # Set momentum to true if momentum was selected in the GUI
         momentum = False
@@ -177,6 +188,8 @@ class build_GA_Menu(Frame):
                 print("Momentum in use!")
 
         for i in range(int(self.iterations.get())):
+            if i % 100 == 0:
+                print("Beginning iteration %s!" % i)
             np.random.shuffle(self.training_data)
 
             if self.update_method.get() == "incremental":
@@ -195,6 +208,7 @@ class build_GA_Menu(Frame):
             print(str(net.calculate_outputs(instance.inputs)) + ":   ", end="")
             print(instance.solution)
 
+        exit()
         return net
 
 if __name__ == '__main__':
