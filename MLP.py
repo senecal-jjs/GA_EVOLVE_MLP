@@ -46,8 +46,11 @@ class network:
     # and return the output of the final layer
     def calculate_outputs(self, inputs):
         self.layers[0].outputs = np.append(inputs, 1)  # the 1 is added as a bias value
+        #print("layer 0 ou")
+        #print(self.layers[0].outputs)
 
         for i in range(self.num_layers - 1):
+            #print("layer %s" % i)
             self.layers[i+1].inputs = self.layers[i].calculate_output()
 
         return self.layers[-1].calculate_output()

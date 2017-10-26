@@ -55,9 +55,20 @@ class build_GA_Menu(Frame):
         feature = Label(self, text="How many instances?")
         feature.grid(row=4, column=0)
 
+        # Activation function selection menu
+        labelMenu = Label(self, text="Label Index")
+        labelMenu.grid(row=5, column=0)
+
+        menuOptions = ["First", "Last"]
+        self.label_index = StringVar(self.master)
+        self.label_index.set("              ")
+
+        self.y = OptionMenu(self, self.label_index, *menuOptions)
+        self.y.grid(row=5, column=1)
+
         # Button to load data from UCI repository
         loadButton = Button(self, text="Load!", command=self.loadAction)
-        loadButton.grid(row=5, column=1)
+        loadButton.grid(row=6, column=1)
 
         # Entry for number of iterations
         iterationsLabel = Label(self, text="Maximum iterations")
@@ -147,22 +158,40 @@ class build_GA_Menu(Frame):
         http = urllib3.PoolManager()
         response = http.request('GET', url)
         data = response.data.decode("utf-8")
-        data = re.split('[, \n]', data)
+        data_lines = re.split('\n', data)
 
-        num_features = int(self.featureNumber.get())
-        features = []
+        for i in range(int(self.numInstances.get())):
+            features_label = data_lines[i].split(',')
+            features = []
+            current_label = np.zeros(len(self.label_dict))
 
-        for i in range(int(self.numInstances.get()) * (num_features + 1)):
-            if (i + 1) % (num_features + 1) != 0:
-                features.append(float(data[i]))
-            else:
-                current_label = np.zeros(len(self.label_dict))
-                current_label[self.label_dict.get(data[i])] = 1
+            if self.label_index.get() == "First":
+                current_label[self.label_dict.get(features_label[0])] = 1
+                for i in range(2, len(features_label)):
+                    features.append(float(features_label[i]))
+            elif self.label_index.get() == "Last":
+                current_label[self.label_dict.get(features_label[-1])] = 1
+                for i in range(len(features_label)-1):
+                    features.append(float(features_label[i]))
 
-                self.data.append(trial_run(features, current_label))
-                features = []
+            self.data.append(trial_run(features, current_label))
 
-        np.random.shuffle(self.data)
+        # data = re.split('[, \n]', data)
+        #
+        # num_features = int(self.featureNumber.get())
+        # features = []
+        #
+        # for i in range(int(self.numInstances.get()) * (num_features + 1)):
+        #     if (i + 1) % (num_features + 1) != 0:
+        #         features.append(float(data[i]))
+        #     else:
+        #         current_label = np.zeros(len(self.label_dict))
+        #         current_label[self.label_dict.get(data[i])] = 1
+        #
+        #         self.data.append(trial_run(features, current_label))
+        #         features = []
+
+        #np.random.shuffle(self.data)
         print(self.data)
 
     def saveLabel(self):
