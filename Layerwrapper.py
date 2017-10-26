@@ -37,12 +37,17 @@ class Layerwrapper:
         self.layers.append(Layer.layer([neurons_per_layer[-1], None], "linear", output_layer=True))
 
         # cache the size of each layer in raw units to use later:
-        for lay, i in zip(layers, len(layers)):
+        for lay, i in zip(self.layers, range(0, len(self.layers)-1)):
             product = 1
-            for s in lay.shape:
-                product = product * i
-            layer_size[i] = product
-            size = size + product
+            for s in lay.weights.shape:
+                product = product * s
+            self.layer_size.append(product)
+            self.size = self.size + product
+
+    def copy_layout(other_layerwrapper):
+        # return a deep copy of the object:
+        return deepcopy(other_layerwrapper)
+
 
     def index_iterator(self):
         """Iterates over the indices of the layer
@@ -50,19 +55,19 @@ class Layerwrapper:
         layer = 0
         row = 0
         col = 0
-        while layer < self.layers:
+        while layer < len(self.layers)-1:
             yield layer, row, col
             col = col + 1
-            if col >= len(self.layers[layer][row]):
+            if col >= len(self.layers[layer].weights[row]):
                 col = 0
                 row = row + 1
-            if row >= len(self.layers[layer]):
+            if row >= len(self.layers[layer].weights):
                 row = 0
                 layer = layer + 1
 
     def obj_iterator(self):
         for i, j, k in self.index_iterator():
-            yield self.layers[i][j][k]
+            yield self.layers[i].weights[j][k]
 
     def __iter__(self):
         return obj_iterator
