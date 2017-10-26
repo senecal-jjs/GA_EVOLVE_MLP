@@ -161,18 +161,30 @@ class build_GA_Menu(Frame):
         data_lines = re.split('\n', data)
 
         for i in range(int(self.numInstances.get())):
-            features_label = data_lines[i].split(',')
+            data_lines[i] = re.sub("\s+", ",", data_lines[i].strip())
+            features_label = re.split('[, \t]', data_lines[i]) #    data_lines[i].split(',')
+            #features_label = features_label[0:int(self.featureNumber.get())+1]
+            print(features_label)
             features = []
             current_label = np.zeros(len(self.label_dict))
 
             if self.label_index.get() == "First":
-                current_label[self.label_dict.get(features_label[0])] = 1
-                for i in range(2, len(features_label)):
-                    features.append(float(features_label[i]))
+                if self.problem.get() == "classification":
+                    current_label[self.label_dict.get(features_label[0])] = 1
+                elif self.problem.get() == "regression":
+                    current_label = float(features_label[0])
+
+                for j in range(1, len(features_label)):
+                    features.append(float(features_label[j]))
+
             elif self.label_index.get() == "Last":
-                current_label[self.label_dict.get(features_label[-1])] = 1
-                for i in range(len(features_label)-1):
-                    features.append(float(features_label[i]))
+                if self.problem.get() == "classification":
+                    current_label[self.label_dict.get(features_label[-1])] = 1
+                elif self.problem.get() == "regression":
+                    current_label = float(features_label[-1])
+
+                for j in range(len(features_label)-1):
+                    features.append(float(features_label[j]))
 
             self.data.append(trial_run(features, current_label))
 
@@ -191,7 +203,7 @@ class build_GA_Menu(Frame):
         #         self.data.append(trial_run(features, current_label))
         #         features = []
 
-        #np.random.shuffle(self.data)
+        np.random.shuffle(self.data)
         print(self.data)
 
     def saveLabel(self):
