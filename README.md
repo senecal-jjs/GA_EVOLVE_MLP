@@ -6,3 +6,4 @@ All datasests are taken from the UCI machine learning database
 + [Concrete Slump Dataset](https://archive.ics.uci.edu/ml/machine-learning-databases/concrete/slump/slump_test.data)
 + [Yacht Hydrodynamics Data Set](https://archive.ics.uci.edu/ml/machine-learning-databases/00243/yacht_hydrodynamics.data)
 + [Airfoil Noise](https://archive.ics.uci.edu/ml/machine-learning-databases/00291/airfoil_self_noise.dat)
++ [Wine](https://archive.ics.uci.edu/ml/machine-learning-databases/wine/wine.data)
