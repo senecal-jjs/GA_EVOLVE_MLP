@@ -30,25 +30,23 @@ class Darwin(ABC):
 
 	def crossover(self, ind1, ind2):
 		''' Given two individuals, perform uniform crossover
-			to produce two new individuals '''
+			to produce a new individual '''
 
 		mask = np.random.randint(0, 2, size = len(ind1))
-		new1 = []
-		new2 = []
-		#i = 0
+		new = []
+		#new2 = []
+
 		for i,bit in enumerate(mask):
 
 			if bit == 0:
 				new1.append(ind1[i])
-				new2.append(ind2[i])
+				#new2.append(ind2[i])
 
 			if bit == 1:
 				new1.append(ind2[i])
-				new2.append(ind1[i])
+				#new2.append(ind1[i])
 
-			#i+=1
-
-		return new1, new2
+		return new #, new2
 
 	def fitness(self, individual):
 		''' Using 0-1 loss, test the fitness of an individual 
@@ -83,11 +81,23 @@ class Darwin(ABC):
 	def _create_population(self):
 		''' Create the initial population to be evolved. '''
 		
-		pop = [] #change this to the wrapper class data type in the network class
+		'''pop = [] #change this to the wrapper class data type in the network class
 		for i in range(self.population_size):
 			for j in range(len(self.nodes_per_layer) - 1):
 				#Add one to the number of nodes to account for bias nodes
 				weight_layer = np.random.uniform(-0.2, 0.2, 
 					size=((self.nodes_per_layer[j] + 1) * self.nodes_per_layer[j+1]))
 				pop.append(weight_layer)
+		return pop'''
+
+		pop = []
+		for i in range(self.population_size):
+
+			vector_size = 0
+
+			for j in range(len(self.nodes_per_layer) - 1):
+				vector_size += (self.nodes_per_layer[j] + 1) * self.nodes_per_layer[j+1]
+			
+			pop.append(np.random.uniform(-0.2, 0.2, size = vector_size))
+
 		return pop
