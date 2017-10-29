@@ -3,8 +3,8 @@ from operator import itemgetter
 import MLP
 import numpy as np
 
-class Darwin(ABC):
 
+class Darwin(ABC):
 	def __init__(self, population_size, nodes_per_layer, activation_function, problem_type):
 		self.population_size = population_size
 		self.nodes_per_layer = nodes_per_layer
@@ -19,7 +19,7 @@ class Darwin(ABC):
 
 	@abstractmethod
 	def select_parents(self):
-		''' Abstract method for selecting the partents to use
+		''' Abstract method for selecting the parents to use
 			for reproduction '''
 		pass
 
