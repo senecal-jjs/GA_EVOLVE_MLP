@@ -3,12 +3,13 @@ from operator import itemgetter
 import MLP
 import numpy as np
 
-class Darwin(ABC):
-	#__metaclass__ = ABCMeta
 
-	def __init__(self, population_size, nodes_per_layer):
+class Darwin(ABC):
+	def __init__(self, population_size, nodes_per_layer, activation_function, problem_type):
 		self.population_size = population_size
 		self.nodes_per_layer = nodes_per_layer
+		self.activation_function = activation_function
+		self.problem_type = problem_type
 		self.population = self._create_population()
 
 	@abstractmethod
@@ -18,7 +19,7 @@ class Darwin(ABC):
 
 	@abstractmethod
 	def select_parents(self):
-		''' Abstract method for selecting the partents to use
+		''' Abstract method for selecting the parents to use
 			for reproduction '''
 		pass
 
@@ -30,31 +31,32 @@ class Darwin(ABC):
 
 	def crossover(self, ind1, ind2):
 		''' Given two individuals, perform uniform crossover
-			to produce two new individuals '''
+			to produce a new individual '''
 
 		mask = np.random.randint(0, 2, size = len(ind1))
-		new1 = []
-		new2 = []
-		#i = 0
+		new = []
+
 		for i,bit in enumerate(mask):
 
 			if bit == 0:
-				new1.append(ind1[i])
-				new2.append(ind2[i])
-
+				new.append(ind1[i])
 			if bit == 1:
-				new1.append(ind2[i])
-				new2.append(ind1[i])
+				new.append(ind2[i])
 
-			#i+=1
+		return new
 
-		return new1, new2
-
-	def fitness(self, individual):
+	def fitness(self, individual, validation_data):
 		''' Using 0-1 loss, test the fitness of an individual 
 			in the population '''
+		# Convert the individual to a network
+		net = self.create_mlp(individual)
 
-		return individual[0] + individual[1] #Change this to 0-1 loss
+		summed_error = 0
+		for instance in validation_data:
+			network_output = net.calculate_outputs(instance.inputs)
+			summed_error += np.sqrt((network_output - instance.solution)**2)
+
+		return summed_error/len(validation_data)
 
 	def replace(self, offspring, method):
 		''' Given the current population, the offspring, and the 
@@ -70,7 +72,7 @@ class Darwin(ABC):
 				pool_fitness.append((individual, self.fitness(individual)))
 
 			pool_fitness = sorted(pool_fitness, key=itemgetter(1))
-			self.population = [ind[0] for ind in pool_fitness[:n:-1]]
+			self.population = [ind[0] for ind in pool_fitness[:n-1:-1]]
 
 		elif method == "generational":
 			#Replace the old generation with the new
@@ -82,12 +84,37 @@ class Darwin(ABC):
 
 	def _create_population(self):
 		''' Create the initial population to be evolved. '''
-		
-		pop = [] #change this to the wrapper class data type in the network class
+
+		pop = []
 		for i in range(self.population_size):
+
+			vector_size = 0
+
 			for j in range(len(self.nodes_per_layer) - 1):
-				#Add one to the number of nodes to account for bias nodes
-				weight_layer = np.random.uniform(-0.2, 0.2, 
-					size=((self.nodes_per_layer[j] + 1) * self.nodes_per_layer[j+1]))
-				pop.append(weight_layer)
+				vector_size += (self.nodes_per_layer[j] + 1) * self.nodes_per_layer[j+1]
+			
+			pop.append(np.random.uniform(-0.2, 0.2, size = vector_size).tolist())
+
 		return pop
+
+	def create_mlp(self, individual):
+		''' Using the weights in the population, create an 
+			MLP network to test on '''
+
+		net = MLP.network(self.nodes_per_layer, self.activation_function, self.problem_type)
+
+		x = 0
+		for i,layer in enumerate(net.layers):
+
+			if i == len(self.nodes_per_layer) - 1:
+				break
+
+			for j in range(self.nodes_per_layer[i] + 1):
+
+				for k in range(self.nodes_per_layer[i + 1]):
+
+					layer.weights[j][k] = individual[x]
+					x += 1
+
+		return net
+

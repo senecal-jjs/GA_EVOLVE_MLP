@@ -4,6 +4,9 @@ import urllib3
 import re
 import numpy as np
 from collections import namedtuple
+import Darwin
+import Genetic
+import DiffEvolution
 import MLP
 
 trial_run = namedtuple('trial_run', ['inputs', 'solution'])
@@ -55,20 +58,30 @@ class build_GA_Menu(Frame):
         feature = Label(self, text="How many instances?")
         feature.grid(row=4, column=0)
 
-        # Activation function selection menu
+        # Problem type
+        problemLabel = Label(self, text="Problem Type")
+        problemLabel.grid(row=5, column=0)
+        options = ["classification", "regression"]
+        self.problem = StringVar(self.master)
+        self.problem.set("            ")
+
+        self.x = OptionMenu(self, self.problem, *options)
+        self.x.grid(row=5, column=1)
+
+        # Where is label located in dataset? This will provide a menu to select a location
         labelMenu = Label(self, text="Label Index")
-        labelMenu.grid(row=5, column=0)
+        labelMenu.grid(row=6, column=0)
 
         menuOptions = ["First", "Last"]
         self.label_index = StringVar(self.master)
         self.label_index.set("              ")
 
         self.y = OptionMenu(self, self.label_index, *menuOptions)
-        self.y.grid(row=5, column=1)
+        self.y.grid(row=6, column=1)
 
         # Button to load data from UCI repository
         loadButton = Button(self, text="Load!", command=self.loadAction)
-        loadButton.grid(row=6, column=1)
+        loadButton.grid(row=7, column=1)
 
         # Entry for number of iterations
         iterationsLabel = Label(self, text="Maximum iterations")
@@ -112,30 +125,20 @@ class build_GA_Menu(Frame):
         self.w = OptionMenu(self, self.update_method, *options)
         self.w.grid(row=4, column=3)
 
-        # Problem type
-        problemLabel = Label(self, text="Problem Type")
-        problemLabel.grid(row=5, column=2)
-        options = ["classification", "regression"]
-        self.problem = StringVar(self.master)
-        self.problem.set("            ")
-
-        self.x = OptionMenu(self, self.problem, *options)
-        self.x.grid(row=5, column=3)
-
         # Check box if the user wants to incorporate momentum in the weight updates
         self.use_momentum = ttk.Checkbutton(self, text="Momentum")
-        self.use_momentum.grid(row=6, column=2)
+        self.use_momentum.grid(row=5, column=2)
 
         # Beta value for momentum term in weight update
         beta_label = Label(self, text="Beta (if momentum selected)")
-        beta_label.grid(row=7, column=2)
+        beta_label.grid(row=6, column=2)
 
         self.beta = Entry(self)
-        self.beta.grid(row=7, column=3)
+        self.beta.grid(row=6, column=3)
 
         # Button to build and start running network
         build = Button(self, text="Build and Run!", command=self.build_net)
-        build.grid(row=8, column=3)
+        build.grid(row=7, column=3)
 
     # Using GUI inputs initialize the network structure
     def build_net(self):
@@ -161,37 +164,33 @@ class build_GA_Menu(Frame):
         data_lines = re.split('\n', data)
 
         for i in range(int(self.numInstances.get())):
-            features_label = data_lines[i].split(',')
+            data_lines[i] = re.sub("\s+", ",", data_lines[i].strip())
+            features_label = re.split('[, \t]', data_lines[i])
+            print(features_label)
             features = []
             current_label = np.zeros(len(self.label_dict))
 
             if self.label_index.get() == "First":
-                current_label[self.label_dict.get(features_label[0])] = 1
-                for i in range(2, len(features_label)):
-                    features.append(float(features_label[i]))
+                if self.problem.get() == "classification":
+                    current_label[self.label_dict.get(features_label[0])] = 1
+                elif self.problem.get() == "regression":
+                    current_label = float(features_label[0])
+
+                for j in range(1, len(features_label)):
+                    features.append(float(features_label[j]))
+
             elif self.label_index.get() == "Last":
-                current_label[self.label_dict.get(features_label[-1])] = 1
-                for i in range(len(features_label)-1):
-                    features.append(float(features_label[i]))
+                if self.problem.get() == "classification":
+                    current_label[self.label_dict.get(features_label[-1])] = 1
+                elif self.problem.get() == "regression":
+                    current_label = float(features_label[-1])
+
+                for j in range(len(features_label)-1):
+                    features.append(float(features_label[j]))
 
             self.data.append(trial_run(features, current_label))
 
-        # data = re.split('[, \n]', data)
-        #
-        # num_features = int(self.featureNumber.get())
-        # features = []
-        #
-        # for i in range(int(self.numInstances.get()) * (num_features + 1)):
-        #     if (i + 1) % (num_features + 1) != 0:
-        #         features.append(float(data[i]))
-        #     else:
-        #         current_label = np.zeros(len(self.label_dict))
-        #         current_label[self.label_dict.get(data[i])] = 1
-        #
-        #         self.data.append(trial_run(features, current_label))
-        #         features = []
-
-        #np.random.shuffle(self.data)
+        np.random.shuffle(self.data)
         print(self.data)
 
     def saveLabel(self):
@@ -244,3 +243,49 @@ if __name__ == '__main__':
     root = Tk()
     app = build_GA_Menu(root)
     root.mainloop()
+
+    # test = Genetic.genetic_algorithm.create_instance(100, [2, 5, 1], 'sigmoid', 'regression')
+    #
+    # #Test function x1 + x2
+    # trial_run = namedtuple('trial_run', ['inputs', 'solution'])
+    # data = []
+    # for i in range(500):
+    #     x = np.random.uniform(0, 3)
+    #     y = np.random.uniform(0, 3)
+    #     data.append(trial_run([x,y], x+y))
+    #
+    # test_data = []
+    # for i in range(500):
+    #     x = np.random.uniform(0, 3)
+    #     y = np.random.uniform(0, 3)
+    #     test_data.append(trial_run([x,y], x+y))
+    #
+    # for individual in test.population:
+    #     print(test.fitness(individual[0], data))
+    #
+    # print()
+    # print("Evolving")
+    #
+    # for i in range(50):
+    #     if i % 5 == 0:
+    #         print("Generation %s!" % i)
+    #     test.evolve(0.1, 0.8, 5, data)
+    #
+    # for individual in test.population:
+    #     print(test.fitness(individual[0], test_data))
+    #     print()
+    #
+    # print()
+    # print("Backprop Result!")
+    # net = MLP.network([2, 5, 1], 'sigmoid', 'regression')
+    #
+    # for i in range(500):
+    #     np.random.shuffle(data)
+    #     net.train_incremental(data, 0.001, use_momentum=False, beta=None)
+    #
+    # summed_error = 0
+    # for instance in test_data:
+    #     network_output = net.calculate_outputs(instance.inputs)
+    #     summed_error += np.sqrt((network_output - instance.solution) ** 2)
+    #
+    # print(summed_error / len(test_data))
