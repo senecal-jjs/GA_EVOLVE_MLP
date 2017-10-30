@@ -9,7 +9,7 @@ class genetic_algorithm(Darwin):
 
         # Assign initial variance for self-adaptive mutation
         for i in range(len(obj.population)):
-            obj.population[i] = [obj.population[i], np.random.uniform(0, 0.1)]
+            obj.population[i] = [obj.population[i], np.random.uniform(0, 0.5)]
         return obj
 
     def evolve(self, mutation_prob, crossover_prob, k, validation_data):

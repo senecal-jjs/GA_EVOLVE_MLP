@@ -45,11 +45,18 @@ class Darwin(ABC):
 
 		return new
 
-	def fitness(self, individual):
+	def fitness(self, individual, validation_data):
 		''' Using 0-1 loss, test the fitness of an individual 
 			in the population '''
+		# Convert the individual to a network
+		net = self.create_mlp(individual)
 
-		return individual[0] + individual[1] #Change this to 0-1 loss
+		summed_error = 0
+		for instance in validation_data:
+			network_output = net.calculate_outputs(instance.inputs)
+			summed_error += np.sqrt((network_output - instance.solution)**2)
+
+		return summed_error/len(validation_data)
 
 	def replace(self, offspring, method):
 		''' Given the current population, the offspring, and the 
