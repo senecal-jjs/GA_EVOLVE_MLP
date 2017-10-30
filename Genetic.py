@@ -12,14 +12,16 @@ class genetic_algorithm(Darwin):
             obj.population[i] = [obj.population[i], np.random.uniform(0, 0.1)]
         return obj
 
-    def evolve(self, mutation_prob, crossover_prob, k):
-        parents = self.select_parents(k)
+    def evolve(self, mutation_prob, crossover_prob, k, validation_data):
+        parents = self.select_parents(k, validation_data)
         offspring = []
-        half_size = len(self.population)/2
+        half_size = int(len(self.population)/2)
 
         for i in range(half_size):
             if np.random.uniform(0, 1) < crossover_prob:
                 children = self.crossover(parents[i], parents[i + half_size])
+            else:
+                children = collections.namedtuple('children', ['child1', 'child2'])(parents[i], parents[i + half_size])
 
             self.mutate(children.child1, mutation_prob)
             self.mutate(children.child2, mutation_prob)
@@ -30,7 +32,7 @@ class genetic_algorithm(Darwin):
         self.replace(offspring, "generational")
 
     # Implementation of tournament based selection to choose parents, k = how many individuals compete in tournament
-    def select_parents(self, k):
+    def select_parents(self, k, validation_data):
         selected_individuals = []
 
         for i in range(self.population_size):
@@ -40,9 +42,9 @@ class genetic_algorithm(Darwin):
             for j in range(k):
                 index = np.random.randint(0, self.population_size)
                 competitors.append(self.population[index])
-                fitness.append(self.fitness(self.population[index][0]))
+                fitness.append(self.fitness(self.population[index][0], validation_data))
 
-            winner = np.argmax(fitness)
+            winner = np.argmin(fitness)
             selected_individuals.append(competitors[winner])
 
         return selected_individuals
@@ -56,6 +58,7 @@ class genetic_algorithm(Darwin):
             for i in range(len(individual[0])):
                 individual[0][i] += np.random.normal(0, individual[1])
 
+    # Uniform crossover
     def crossover(self, ind1, ind2):
         mask = np.random.randint(0, 2, size=len(ind1[0]))
         child1 = []
