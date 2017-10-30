@@ -1,5 +1,5 @@
 import numpy as np
-from collections import namedtuple
+import collections
 from Darwin import Darwin
 
 
@@ -8,25 +8,24 @@ class genetic_algorithm(Darwin):
         obj = genetic_algorithm(population_size, nodes_per_layer, activation_function, problem_type)
 
         # Assign initial variance for self-adaptive mutation
-        individual = namedtuple('individual', ['chromosome', 'stdev'])
         for i in range(len(obj.population)):
-            obj.population[i] = individual(obj.population[i], np.random.uniform(-0.01, 0.01))
+            obj.population[i] = [obj.population[i], np.random.uniform(0, 0.1)]
         return obj
 
     def evolve(self, mutation_prob, crossover_prob, k):
         parents = self.select_parents(k)
         offspring = []
+        half_size = len(self.population)/2
 
-        for i in range(len(self.population)):
-            child = parents[i]
+        for i in range(half_size):
+            if np.random.uniform(0, 1) < crossover_prob:
+                children = self.crossover(parents[i], parents[i + half_size])
 
-            if np.random.uniform(0, 1) < crossover_prob and (i+1) < len(self.population):
-                child = self.crossover(parents[i], parents[i+1])
+            self.mutate(children.child1, mutation_prob)
+            self.mutate(children.child2, mutation_prob)
 
-            if np.random.uniform(0, 1) < mutation_prob:
-                self.mutate(child)
-
-            offspring.append(child)
+            offspring.append(children.child1)
+            offspring.append(children.child2)
 
         self.replace(offspring, "generational")
 
@@ -41,7 +40,7 @@ class genetic_algorithm(Darwin):
             for j in range(k):
                 index = np.random.randint(0, self.population_size)
                 competitors.append(self.population[index])
-                fitness.append(self.fitness(self.population[index].chromosome))
+                fitness.append(self.fitness(self.population[index][0]))
 
             winner = np.argmax(fitness)
             selected_individuals.append(competitors[winner])
@@ -49,9 +48,28 @@ class genetic_algorithm(Darwin):
         return selected_individuals
 
     # Mutation using self-adaptive mutation strategy
-    def mutate(self, individual):
-        u = np.random.normal(0, 1)
-        individual.stdev = individual.stdev * np.exp(u/np.sqrt(len(individual.chromosome)))
+    def mutate(self, individual, mutation_prob):
+        if np.random.uniform(0, 1) < mutation_prob:
+            u = np.random.normal(0, 1)
+            individual[1] = individual[1] * np.exp(u/np.sqrt(len(individual[0])))
 
-        for gene in individual.chromosome:
-            gene += np.random.normal(0, individual.stdev)
+            for i in range(len(individual[0])):
+                individual[0][i] += np.random.normal(0, individual[1])
+
+    def crossover(self, ind1, ind2):
+        mask = np.random.randint(0, 2, size=len(ind1[0]))
+        child1 = []
+        child2 = []
+
+        for i, bit in enumerate(mask):
+            if bit == 0:
+                child1.append(ind1[0][i])
+                child2.append(ind2[0][i])
+            else:
+                child1.append(ind2[0][i])
+                child2.append(ind1[0][i])
+
+        child1 = [child1, ind1[1]]
+        child2 = [child2, ind2[1]]
+
+        return collections.namedtuple('children', ['child1', 'child2'])(child1, child2)

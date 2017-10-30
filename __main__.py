@@ -4,6 +4,9 @@ import urllib3
 import re
 import numpy as np
 from collections import namedtuple
+import Darwin
+import Genetic
+import DiffEvolution
 import MLP
 
 trial_run = namedtuple('trial_run', ['inputs', 'solution'])
@@ -253,6 +256,13 @@ class build_GA_Menu(Frame):
         return net
 
 if __name__ == '__main__':
-    root = Tk()
-    app = build_GA_Menu(root)
-    root.mainloop()
+    # root = Tk()
+    # app = build_GA_Menu(root)
+    # root.mainloop()
+
+    test = Genetic.genetic_algorithm.create_instance(10, [2, 3, 1], 'sigmoid', 'classification')
+
+    parents = test.select_parents(3)
+
+    for individual in parents:
+        print(individual)
