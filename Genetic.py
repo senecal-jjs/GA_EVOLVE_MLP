@@ -9,10 +9,11 @@ class genetic_algorithm(Darwin):
 
         # Assign initial variance for self-adaptive mutation
         for i in range(len(obj.population)):
-            obj.population[i] = [obj.population[i], np.random.uniform(0, 0.5)]
+            obj.population[i].append(np.random.uniform(0,1))  #[obj.population[i], np.random.uniform(0, 1)]
         return obj
 
     def evolve(self, mutation_prob, crossover_prob, k, validation_data):
+        np.random.shuffle(self.population)
         parents = self.select_parents(k, validation_data)
         offspring = []
         half_size = int(len(self.population)/2)
@@ -42,9 +43,11 @@ class genetic_algorithm(Darwin):
             for j in range(k):
                 index = np.random.randint(0, self.population_size)
                 competitors.append(self.population[index])
-                fitness.append(self.fitness(self.population[index][0], validation_data))
+                fitness.append(self.fitness(self.population[index][0:-1], validation_data))
 
             winner = np.argmin(fitness)
+            # if i % 10 == 0:
+            #     print("Winner: " + str(competitors[winner]))
             selected_individuals.append(competitors[winner])
 
         return selected_individuals
@@ -53,26 +56,29 @@ class genetic_algorithm(Darwin):
     def mutate(self, individual, mutation_prob):
         if np.random.uniform(0, 1) < mutation_prob:
             u = np.random.normal(0, 1)
-            individual[1] = individual[1] * np.exp(u/np.sqrt(len(individual[0])))
+            individual[-1] = individual[-1] * np.exp(u/np.sqrt(len(individual[0:-1])))
 
-            for i in range(len(individual[0])):
-                individual[0][i] += np.random.normal(0, individual[1])
+            for i in range(len(individual)-1):
+                individual[i] += np.random.normal(0, individual[-1])
 
     # Uniform crossover
     def crossover(self, ind1, ind2):
-        mask = np.random.randint(0, 2, size=len(ind1[0]))
+        # pt1 = np.random.randint(0, int(len(ind1[0])/2))
+        # pt2 = np.random.randint(int(len(ind1[0])/2), len(ind1[0]))
+        #
+        # child1 = ind1[0][0:pt1] + ind2[0][pt1:pt2] + ind1[0][pt2:len(ind1[0])]
+        # child2 = ind2[0][0:pt1] + ind1[0][pt1:pt2] + ind2[0][pt2:len(ind1[0])]
+
+        mask = np.random.randint(0, 2, size=len(ind1))
         child1 = []
         child2 = []
 
         for i, bit in enumerate(mask):
             if bit == 0:
-                child1.append(ind1[0][i])
-                child2.append(ind2[0][i])
+                child1.append(ind1[i])
+                child2.append(ind2[i])
             else:
-                child1.append(ind2[0][i])
-                child2.append(ind1[0][i])
-
-        child1 = [child1, ind1[1]]
-        child2 = [child2, ind2[1]]
+                child1.append(ind2[i])
+                child2.append(ind1[i])
 
         return collections.namedtuple('children', ['child1', 'child2'])(child1, child2)

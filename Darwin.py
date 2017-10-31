@@ -93,7 +93,7 @@ class Darwin(ABC):
 			for j in range(len(self.nodes_per_layer) - 1):
 				vector_size += (self.nodes_per_layer[j] + 1) * self.nodes_per_layer[j+1]
 			
-			pop.append(np.random.uniform(-0.2, 0.2, size = vector_size).tolist())
+			pop.append(np.random.uniform(-5, 5, size = vector_size).tolist())
 
 		return pop
 

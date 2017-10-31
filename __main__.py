@@ -118,12 +118,12 @@ class build_GA_Menu(Frame):
         # Update method
         updateLabel = Label(self, text="Update method")
         updateLabel.grid(row=4, column=2)
-        options = ["incremental", "batch", "stochastic"]
+        update_options = ["incremental", "batch", "stochastic"]
         self.update_method = StringVar(self.master)
         self.update_method.set("            ")
 
-        self.w = OptionMenu(self, self.update_method, *options)
-        self.w.grid(row=4, column=3)
+        self.t = OptionMenu(self, self.update_method, *update_options)
+        self.t.grid(row=4, column=3)
 
         # Check box if the user wants to incorporate momentum in the weight updates
         self.use_momentum = ttk.Checkbutton(self, text="Momentum")
@@ -136,12 +136,22 @@ class build_GA_Menu(Frame):
         self.beta = Entry(self)
         self.beta.grid(row=6, column=3)
 
+        # Select which algorithm you want to use
+        alg_label = Label(self, text="Algorithm Selection")
+        alg_label.grid(row=7, column=2)
+        alg_options = ["Backpropagation", "Genetic Algorithm", u"\u03bc" + "+" + u"\u03bb" + " ES", "Differential Evolution"]
+        self.alg_selection = StringVar(self.master)
+        self.alg_selection.set("            ")
+
+        self.z = OptionMenu(self, self.alg_selection, *alg_options)
+        self.z.grid(row=7, column=3)
+
         # Button to build and start running network
-        build = Button(self, text="Build and Run!", command=self.build_net)
-        build.grid(row=7, column=3)
+        build = Button(self, text="Build and Run!", command=self.approx_function)
+        build.grid(row=8, column=3)
 
     # Using GUI inputs initialize the network structure
-    def build_net(self):
+    def get_mlp_layers(self):
         nodes_per_layer = self.nodes.get().split(',')
         layer_structure = [int(self.featureNumber.get())]
 
@@ -149,10 +159,7 @@ class build_GA_Menu(Frame):
             layer_structure.append(int(layer))
 
         layer_structure.append(len(self.label_dict))
-        net = MLP.network(layer_structure, self.actFunc.get(), self.problem.get())
-
-        # Run the network
-        self.run(net)
+        return layer_structure
 
     # Load data from UCI repository and convert it to list of tuples(inputs, solution)
     def loadAction(self):
@@ -166,7 +173,6 @@ class build_GA_Menu(Frame):
         for i in range(int(self.numInstances.get())):
             data_lines[i] = re.sub("\s+", ",", data_lines[i].strip())
             features_label = re.split('[, \t]', data_lines[i])
-            print(features_label)
             features = []
             current_label = np.zeros(len(self.label_dict))
 
@@ -191,7 +197,7 @@ class build_GA_Menu(Frame):
             self.data.append(trial_run(features, current_label))
 
         np.random.shuffle(self.data)
-        print(self.data)
+        # print(self.data)
 
     def saveLabel(self):
         self.label_dict[self.labelEntry.get()] = self.label_number
@@ -199,12 +205,87 @@ class build_GA_Menu(Frame):
         self.labelEntry.delete(0, END)
         print(self.label_dict)
 
-    # Run network with parameters from GUI, print results of test data set
-    def run(self, net):
+    # ================== METHODS TO RUN AND TEST ALGORITHMS ============================================================
+
+    def approx_function(self):
+        self.training_data = self.data[0:200]
+        self.testing_data = self.data[200:250]
+        self.validation_data = self.data[250:-1]
+
+        self.run_GA()
+
+        #self.print_starting_info() # Still needs to be implemented
+
+        # for i in range(10):
+        #
+        #     print("Starting fold " + str(i + 1) + " of 10...")
+        #     self.training_data = []
+        #     self.testing_data = []
+        #     self.validation_data = []
+        #     [self.testing_data.append(trial_run(item[0], item[1])) for item in data_folds[i]]
+        #     [self.validation_data.append(trial_run(item[0], item[1])) for item in data_folds[i - 1]]
+        #     for j in range(10):
+        #         if j != i and j != i - 1:
+        #             [self.training_data.append(trial_run(item[0], item[1])) for item in data_folds[j]]
+        #
+        #     if self.alg_selection.get() == "Backpropagation":
+        #         print("Backprop!")
+        #         self.run_backprop()
+        #
+        #     if self.alg_selection.get() == "Genetic Algorithm":
+        #         self.run_GA()
+        #
+        #     if self.alg_selection.get() == u"\u03bc" + "+" + u"\u03bb" + " ES":
+        #         self.run_ES()
+        #
+        #     if self.alg_selection.get() == "Differential Evolution":
+        #         self.run_diff()
+        #
+        #     print("----------------------------------------")
+
+        exit()
+
+    def run_GA(self):
+        net_layers = self.get_mlp_layers()
+        ga = Genetic.genetic_algorithm.create_instance(6, net_layers, self.actFunc.get(), self.problem.get())
+        net_rmse = self.train_GA(ga)
+        self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
+
+    def train_GA(self, ga_instance):
+        RMSE = []
+        best_network = object
+        best_rmse = 999
+
+        # For number of specified generations evolve the network population
+        for i in range(int(self.iterations.get())):
+            if i % 5 == 0:
+                print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...with rmse of: " + str(best_rmse))
+
+            # GA parameter order: mutation rate, crossover rate, No. individuals for tournament, validation data
+            ga_instance.evolve(0.1, 0.8, 2, self.training_data)
+
+            # Calculate the rmse of the fittest individual in the population, and append to list of rmse at each
+            # generation
+            best_rmse = sys.maxsize
+            for individual in ga_instance.population:
+                print(individual)
+                print()
+                current_net = ga_instance.create_mlp(individual[0])
+                current_rmse = self.validate_network(current_net)
+
+                if current_rmse < best_rmse:
+                    best_rmse = current_rmse
+                    best_network = current_net
+
+            RMSE.append(best_rmse)
+
+        return best_network, RMSE
+
+    # Train network using backpropagation
+    def train_backprop(self, net):
         learning = float(self.learningRate.get())
-        training_number = int(len(self.data)*0.66)
-        self.training_data = self.data[0:training_number]
-        testing_data = self.data[training_number:-1]
+        RMSE = []
+        error = 999
 
         # Set momentum to true if momentum was selected in the GUI
         momentum = False
@@ -217,7 +298,8 @@ class build_GA_Menu(Frame):
 
         for i in range(int(self.iterations.get())):
             if i % 100 == 0:
-                print("Beginning iteration %s!" % i)
+                print("Beginning iteration " + str(i) + " of " + self.iterations.get() + "...with rmse of: " + str(error))
+
             np.random.shuffle(self.training_data)
 
             if self.update_method.get() == "incremental":
@@ -232,50 +314,101 @@ class build_GA_Menu(Frame):
                 net.train_stochastic(self.training_data, batch_size, num_batches, learning, use_momentum=momentum,
                                      beta=beta)
 
-        for instance in testing_data:
-            print(str(net.calculate_outputs(instance.inputs)) + ":   ", end="")
-            print(instance.solution)
+            error = self.validate_network(net)
+            RMSE.append(error)
 
-        exit()
-        return net
+        return net, RMSE
+
+    # Method to calculated the RMSE (error) on a validation data set during training
+    def validate_network(self, net):
+        output_vals = []
+        true_vals = [test.solution for test in self.validation_data]
+
+        for testInput in self.validation_data:
+            data_in = testInput.inputs
+            out_val = net.calculate_outputs(data_in)[0]
+            output_vals.append(out_val)
+
+        error = self.rmse(output_vals, true_vals)
+        return error
+
+        # Method to test the performance of the network on a test data set, after training has completed.
+    def test_network(self, net, rmse_vals=None):
+        ''' Given the trained net, calculate the output of the net
+            Print the root mean square error to the console by default
+            If write output is set, create a CSV with the test inputs,
+            outputs, and other statistics '''
+
+        input_vals = []
+        output_vals = []
+        true_vals = [test.solution for test in self.testing_data]
+
+        for testInput in self.testing_data:
+            data_in = testInput.inputs
+            out_val = net.calculate_outputs(data_in)[0]
+            output_vals.append(out_val)
+            input_vals.append(data_in)
+
+        error = self.rmse(output_vals, true_vals)
+        print("RMSE: %f\n" % error)
+
+        # write = False
+        # for state in self.write_output.state():
+        #     if state == "selected":
+        #         write = True
+        # if write:
+        #     self.create_csv(input_vals, output_vals, true_vals, rmse_vals);
+
+    # Method to calculated the RMSE (error) given an array of network outputs, and an array of the true values
+    def rmse(self, predicted, true):
+        # Given arrays of predicted and true values, calculate root mean square error
+        return np.sqrt(((np.array(predicted) - np.array(true)) ** 2).mean())
 
 if __name__ == '__main__':
-    root = Tk()
-    app = build_GA_Menu(root)
-    root.mainloop()
+    # root = Tk()
+    # app = build_GA_Menu(root)
+    # root.mainloop()
 
-    # test = Genetic.genetic_algorithm.create_instance(100, [2, 5, 1], 'sigmoid', 'regression')
-    #
-    # #Test function x1 + x2
-    # trial_run = namedtuple('trial_run', ['inputs', 'solution'])
-    # data = []
-    # for i in range(500):
-    #     x = np.random.uniform(0, 3)
-    #     y = np.random.uniform(0, 3)
-    #     data.append(trial_run([x,y], x+y))
-    #
-    # test_data = []
-    # for i in range(500):
-    #     x = np.random.uniform(0, 3)
-    #     y = np.random.uniform(0, 3)
-    #     test_data.append(trial_run([x,y], x+y))
-    #
-    # for individual in test.population:
-    #     print(test.fitness(individual[0], data))
-    #
-    # print()
-    # print("Evolving")
-    #
-    # for i in range(50):
-    #     if i % 5 == 0:
-    #         print("Generation %s!" % i)
-    #     test.evolve(0.1, 0.8, 5, data)
-    #
-    # for individual in test.population:
-    #     print(test.fitness(individual[0], test_data))
-    #     print()
-    #
-    # print()
+    test = Genetic.genetic_algorithm.create_instance(1000, [2, 5, 1], 'sigmoid', 'regression')
+
+    #Test function x1 + x2
+    trial_run = namedtuple('trial_run', ['inputs', 'solution'])
+    data = []
+    for i in range(500):
+        x = np.random.uniform(0, 3)
+        y = np.random.uniform(0, 3)
+        data.append(trial_run([x,y], x+y))
+
+    test_data = []
+    for i in range(500):
+        x = np.random.uniform(0, 3)
+        y = np.random.uniform(0, 3)
+        test_data.append(trial_run([x,y], x+y))
+
+    for individual in test.population:
+        print(individual)
+
+    print()
+    print("Evolving")
+
+    for i in range(25):
+        if i % 5 == 0:
+            print("Generation %s!" % i)
+            fitness = []
+            for individual in test.population:
+                fitness.append(test.fitness(individual[0:-1], test_data))
+            print(np.min(fitness))
+        #     for i in range(5):
+        #         print(test.population[np.random.randint(0, 50)])
+        test.evolve(0.3, 0.5, 5, data)
+
+    fitness = []
+    for individual in test.population:
+        fitness.append(test.fitness(individual[0:-1], test_data))
+
+    print(np.min(fitness))
+
+    print()
     # print("Backprop Result!")
     # net = MLP.network([2, 5, 1], 'sigmoid', 'regression')
     #
