@@ -20,6 +20,21 @@ trial_run = namedtuple('trial_run', ['inputs', 'solution'])
 class network:
     # To create a MLP network provide the neurons desired for each layer, along with the activation function that
     # will be used in the hidden layer neurons
+
+
+    def from_weights(weights, neurons_per_layer, activation_function, problem_type):
+        # create instance: (weights will be initialized to random values)
+        obj = network(neurons_per_layer, activation_function, problem_type)
+        # sanity check:
+        assert(obj.allLayers.size == len(weights))
+        # overwrite the values in the weights:
+        w_index = 0
+        for l, r, c in obj.allLayers.index_iterator():
+            obj.allLayers.layers[l].weights[r][c] = weights[w_index]
+            w_index = w_index + 1
+        return obj
+
+
     def __init__(self, neurons_per_layer, activation_function, problem_type):
         self.layers = []
         self.num_layers = len(neurons_per_layer)
