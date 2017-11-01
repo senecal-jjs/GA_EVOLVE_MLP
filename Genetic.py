@@ -1,6 +1,7 @@
 import numpy as np
 import collections
 from Darwin import Darwin
+import time
 
 
 class genetic_algorithm(Darwin):
@@ -9,11 +10,10 @@ class genetic_algorithm(Darwin):
 
         # Assign initial variance for self-adaptive mutation
         for i in range(len(obj.population)):
-            obj.population[i].append(np.random.uniform(0,1))  #[obj.population[i], np.random.uniform(0, 1)]
+            obj.population[i].append(np.random.uniform(0, 5))  #[obj.population[i], np.random.uniform(0, 1)]
         return obj
 
     def evolve(self, mutation_prob, crossover_prob, k, validation_data):
-        np.random.shuffle(self.population)
         parents = self.select_parents(k, validation_data)
         offspring = []
         half_size = int(len(self.population)/2)
@@ -54,12 +54,12 @@ class genetic_algorithm(Darwin):
 
     # Mutation using self-adaptive mutation strategy
     def mutate(self, individual, mutation_prob):
-        if np.random.uniform(0, 1) < mutation_prob:
-            u = np.random.normal(0, 1)
-            individual[-1] = individual[-1] * np.exp(u/np.sqrt(len(individual[0:-1])))
+        for i in range(len(individual) - 1):
+            if np.random.uniform(0, 1) < mutation_prob:
+                u = np.random.normal(0, 1)
+                individual[-1] = individual[-1] * np.exp(u / np.sqrt(len(individual[0:-1])))
+                individual[i] += np.random.normal(0, 1) #np.random.normal(0, individual[-1])
 
-            for i in range(len(individual)-1):
-                individual[i] += np.random.normal(0, individual[-1])
 
     # Uniform crossover
     def crossover(self, ind1, ind2):
