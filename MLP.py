@@ -38,6 +38,7 @@ class network:
     def __init__(self, neurons_per_layer, activation_function, problem_type):
         self.layers = []
         self.num_layers = len(neurons_per_layer)
+        self.problem_type = problem_type
 
         # Create the layers of the network
         for i in range(self.num_layers-1):
