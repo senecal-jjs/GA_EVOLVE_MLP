@@ -4,6 +4,9 @@ import urllib3
 import re
 import numpy as np
 from collections import namedtuple
+import xlsxwriter
+import os, errno, getpass # for file writing
+import time
 import Darwin
 import Genetic
 import DiffEvolution
@@ -78,6 +81,9 @@ class build_GA_Menu(Frame):
 
         self.y = OptionMenu(self, self.label_index, *menuOptions)
         self.y.grid(row=6, column=1)
+
+        self.write_output = ttk.Checkbutton(self, text="Write Output")
+        self.write_output.grid(row=7, column=0)
 
         # Button to load data from UCI repository
         loadButton = Button(self, text="Load!", command=self.loadAction)
@@ -213,9 +219,6 @@ class build_GA_Menu(Frame):
         self.training_data = self.data[0:training_cut]
         self.validation_data = self.data[training_cut:validation_cut]
         self.testing_data = self.data[validation_cut:len(self.data)]
-        # self.training_data = self.data[0:200]
-        # self.testing_data = self.data[200:250]
-        # self.validation_data = self.data[250:-1]
 
         if self.alg_selection.get() == "Backpropagation":
             self.run_backprop()
@@ -277,8 +280,12 @@ class build_GA_Menu(Frame):
                 # generation
                 if self.problem.get() == "regression":
                     print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...with rmse of: " + str(best_rmse))
+                    if best_rmse < 2:
+                        break
                 elif self.problem.get() == "classification":
                     print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...percent incorrect: " + str(best_rmse))
+                    if best_rmse < 0.05: # 5% incorrect
+                        break
 
                 best_rmse = sys.maxsize
                 for individual in ga_instance.population:
@@ -315,8 +322,12 @@ class build_GA_Menu(Frame):
             if i % 100 == 0:
                 if self.problem.get() == "regression":
                     print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...with rmse of: " + str(error))
+                    if error < 2:
+                        break
                 elif self.problem.get() == "classification":
                     print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...percent incorrect: " + str(error))
+                    if error < 0.05:
+                        break
 
             np.random.shuffle(self.training_data)
 
@@ -365,11 +376,13 @@ class build_GA_Menu(Frame):
             If write output is set, create a CSV with the test inputs,
             outputs, and other statistics '''
 
+        input_vals = []
         output_vals = []
         true_vals = [test.solution for test in self.testing_data]
 
         for testInput in self.testing_data:
             data_in = testInput.inputs
+            input_vals.append(data_in)
             if self.problem.get() == "regression":
                 out_val = net.calculate_outputs(data_in)[0]
             elif self.problem.get() == "classification":
@@ -385,16 +398,15 @@ class build_GA_Menu(Frame):
             print("Percent Incorrect: %f\n" % percent_accurate)
 
 
-        # write = False
-        # for state in self.write_output.state():
-        #     if state == "selected":
-        #         write = True
-        # if write:
-        #     self.create_csv(input_vals, output_vals, true_vals, rmse_vals);
+        write = False
+        for state in self.write_output.state():
+            if state == "selected":
+                write = True
+        if write:
+            self.create_csv(input_vals, output_vals, true_vals, rmse_vals);
 
     # Method to calculated the RMSE (error) given an array of network outputs, and an array of the true values
     def rmse(self, predicted, true):
-        # Given arrays of predicted and true values, calculate root mean square error
         return np.sqrt(((np.array(predicted) - np.array(true)) ** 2).mean())
 
     def accuracy(self, predicted, true):
@@ -406,6 +418,51 @@ class build_GA_Menu(Frame):
                 incorrect += 1
 
         return incorrect/len(predicted)
+
+    def create_csv(self, input_vals, output_vals, true_vals, rmse_vals=None):
+        ''' Create a csv file with the test inputs, calculated outputs,
+                    true values and relevant statistics. '''
+
+        user = getpass.getuser()
+        time_start = time.strftime("%m-%d:%H:%M:%S")
+        print("Writing output at time: " + time_start)
+
+        folder_dir = os.path.abspath("./outputs")
+        # Make output directory
+        try:
+            os.makedirs(folder_dir)
+            print("Output directory created at " + folder_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        file_name = folder_dir + "/" + user + "_" + self.alg_selection.get() + "_" + time_start + ".xlsx"
+        print("Writing output to " + file_name)
+
+        workbook = xlsxwriter.Workbook(file_name)
+        worksheet = workbook.add_worksheet()
+        worksheet.write('A1', "# File created at time " + time_start + " by " + user + " using " + self.alg_selection.get())
+        worksheet.write('A2', "Label Key")
+        worksheet.write('B2', str(self.label_dict))
+        worksheet.write('A4', "Input Values")
+        worksheet.write('B4', "Network Output")
+        worksheet.write('C4', "True Values")
+        worksheet.write('D4', "Validation Error")
+
+        row = 5
+        for i in range(len(input_vals)):
+            worksheet.write(row, 0, input_vals[i])
+            worksheet.write(row, 1, output_vals[i])
+            worksheet.write(row, 2, true_vals[i])
+            row += 1
+
+        row = 5
+        for i in range(len(rmse_vals)):
+            worksheet.write(row, 3, rmse_vals[i])
+            row += 1
+
+        workbook.close()
+        print("Done writing file.")
 
 
 if __name__ == '__main__':
