@@ -32,27 +32,33 @@ class DiffEvolution(Darwin):
 		parents = self.population[0:4]
 		return parents
 
-	def evolve(self):
+	def evolve(self, validation_data):
 		''' Combine selection, mutation, crossover, and replacement
 			to evolve the population into its next generation '''
 
 		new_pop = []
 
 		#Create n offspring, where n is population size
-		#Each loop through creates two offspring, so do n/2 loops
 		for i in range(len(self.population)):
 			parents = self.select_parents()
 			parent1 = parents[0]
 			parent2 = self.mutate(parents[1:])
 			offspring = self.crossover(parent1, parent2)
-			new_pop.append(offspring)
-			#new_pop.append(offspring2)
+			#new_pop.append(offspring)
+			self.parent_vs_offspring(parent1, offspring, validation_data)
 
-		self.replace(new_pop, "fittest")
+		#self.replace(new_pop, "fittest")
+
+	def parent_vs_offspring(self, parent, offspring, validation_data):
+		''' Compare the parent and the offspring. The fitter of the
+			two goes back into the population '''
+
+		if self.fitness(offspring, validation_data) < self.fitness(parent, validation_data):
+			self.population[0] = offspring
 
 
 if __name__ == '__main__':
-	test = DiffEvolution.create_instance(0.1, 4, [2, 2, 1], "sigmoid", "classification")
+	test = DiffEvolution.create_instance(0.1, 4, [2, 2, 3, 1], "sigmoid", "classification")
 	#for i,ind in enumerate(test.population):
 	#	print ("Individual " + str(i) + ": " + str(ind))
 	net = test.create_mlp(test.population[0])
