@@ -4,6 +4,9 @@ from collections import namedtuple
 
 
 class MuLambda(Darwin):
+"""Population for MuLambda is different from the superclass:
+each individual is a namedtuple(genes, sigmas).
+"""
 
     Individual = namedtuple('Individual', genes, sigmas)
 
@@ -30,6 +33,9 @@ class MuLambda(Darwin):
         return pop
 
     def _loc_new_sigma(indiv):
+        """Return a set of new sigma values for an individual. Doesn't update
+        the individual. Suggested by Computational Intelligence Second edition, Section 13.2.3
+        """
         return indiv.sigmas * np.exp(u_zero * self.r1 + self.r2 * np.random.normal(0,1))
 
     def mutate(self, individual):
@@ -49,15 +55,25 @@ class MuLambda(Darwin):
         return [ind[0] for ind in pool[:n-1:-1] ]
 
     def local_es(self, validation_data):
+        """ Performs one iteration of the Local variance adaptation variation
+        of the evolution stratagy algorithm
+        """
         new_pop = self.population.copy()
         for indiv in np.random.choice(self.population, self.lamb, replace=True):
             new_pop.append(self.mutate(indiv))
         self.population = self._pick_top(self.population_size, new_pop, validation_data)
 
     def global_es(self, validation_data):
+        """ Performs one iteration of the global variance adaptation variation
+        of the evolution stratagy algorithm
+        """
         pass
 
-    def evolve(self, variance_type, validation_data):
+    def evolve(self, validation_data, variance_type="local"):
+        """ Performs one iteration of an addaptive version of the evolution strategy
+        algorithm. Specify "local" or "global" to choose what type of sigma update to
+        use. Uses "local" by default.
+        """
         if variance_type == "local":
             self.local_es(validation_data)
         else:
@@ -65,4 +81,7 @@ class MuLambda(Darwin):
         t = t + 1
 
     def select_parents(self):
+        """ This function is not needed for the current version of the algorithm, and
+        will raise an error when called.
+        """
         raise "Don't call this method, silly"
