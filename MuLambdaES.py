@@ -44,7 +44,7 @@ class MuLambda(Darwin):
     def _pick_top(n, canidates, validation_data):
         pool = []
         for indiv in canidates:
-            pool.append((indiv, self.fitness(indiv, validation_data)))
+            pool.append((indiv, self.fitness(indiv.genes, validation_data)))
         pool.sort(key=itemgetter(1))
         return [ind[0] for ind in pool[:n-1:-1] ]
 
@@ -54,14 +54,14 @@ class MuLambda(Darwin):
             new_pop.append(self.mutate(indiv))
         self.population = self._pick_top(self.population_size, new_pop, validation_data)
 
-    def global_se(self, validation_data):
+    def global_es(self, validation_data):
         pass
 
     def evolve(self, variance_type, validation_data):
         if variance_type == "local":
             self.local_es(validation_data)
         else:
-            self.global_se(validation_data)
+            self.global_es(validation_data)
         t = t + 1
 
     def select_parents(self):
