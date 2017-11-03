@@ -38,6 +38,7 @@ class network:
     def __init__(self, neurons_per_layer, activation_function, problem_type):
         self.layers = []
         self.num_layers = len(neurons_per_layer)
+        self.problem_type = problem_type
 
         # Create the layers of the network
         for i in range(self.num_layers-1):
@@ -52,7 +53,7 @@ class network:
         # Create output layer, with linear output as the activation function
         if problem_type == "classification":
             self.layers.append(Layer.layer([neurons_per_layer[-1], None], "softmax", output_layer=True))
-        else:
+        elif problem_type == "regression":
             self.layers.append(Layer.layer([neurons_per_layer[-1], None], "linear", output_layer=True))
 
         self.previous_weight_change = [np.zeros(l.weights.shape) for l in self.layers[:-1]]
