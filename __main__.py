@@ -5,6 +5,7 @@ import re
 import numpy as np
 from collections import namedtuple
 import xlsxwriter
+import csv
 import os, errno, getpass # for file writing
 import time
 import Darwin
@@ -26,7 +27,7 @@ class build_GA_Menu(Frame):
         self.init_gui()
 
     def init_gui(self):
-        self.master.title('Classification')
+        self.master.title('Train Neural Network!')
         self.pack(fill=BOTH, expand=1)
 
         # Create entry for source URL
@@ -209,50 +210,50 @@ class build_GA_Menu(Frame):
         self.label_dict[self.labelEntry.get()] = self.label_number
         self.label_number += 1
         self.labelEntry.delete(0, END)
-        print(self.label_dict)
+        # print(self.label_dict)
 
     # ================== METHODS TO RUN AND TEST ALGORITHMS ============================================================
 
     def approx_function(self):
-        training_cut = int(0.66*len(self.data))
-        validation_cut = int(0.8*len(self.data))
-        self.training_data = self.data[0:training_cut]
-        self.validation_data = self.data[training_cut:validation_cut]
-        self.testing_data = self.data[validation_cut:len(self.data)]
+        # training_cut = int(0.66*len(self.data))
+        # validation_cut = int(0.8*len(self.data))
+        # self.training_data = self.data[0:training_cut]
+        # self.validation_data = self.data[training_cut:validation_cut]
+        # self.testing_data = self.data[validation_cut:len(self.data)]
+        #
+        # if self.alg_selection.get() == "Backpropagation":
+        #     self.run_backprop()
+        # elif self.alg_selection.get() == "Genetic Algorithm":
+        #     self.run_GA()
+        self.data = np.array(self.data)
+        data_folds = np.array_split(self.data, 10)
+        self.print_starting_info() # Still needs to be implemented
 
-        if self.alg_selection.get() == "Backpropagation":
-            self.run_backprop()
-        elif self.alg_selection.get() == "Genetic Algorithm":
-            self.run_GA()
+        for i in range(10):
 
-        #self.print_starting_info() # Still needs to be implemented
+            print("Starting fold " + str(i + 1) + " of 10...")
+            self.training_data = []
+            self.testing_data = []
+            self.validation_data = []
+            [self.testing_data.append(trial_run(item[0], item[1])) for item in data_folds[i]]
+            [self.validation_data.append(trial_run(item[0], item[1])) for item in data_folds[i - 1]]
+            for j in range(10):
+                if j != i and j != i - 1:
+                    [self.training_data.append(trial_run(item[0], item[1])) for item in data_folds[j]]
 
-        # for i in range(10):
-        #
-        #     print("Starting fold " + str(i + 1) + " of 10...")
-        #     self.training_data = []
-        #     self.testing_data = []
-        #     self.validation_data = []
-        #     [self.testing_data.append(trial_run(item[0], item[1])) for item in data_folds[i]]
-        #     [self.validation_data.append(trial_run(item[0], item[1])) for item in data_folds[i - 1]]
-        #     for j in range(10):
-        #         if j != i and j != i - 1:
-        #             [self.training_data.append(trial_run(item[0], item[1])) for item in data_folds[j]]
-        #
-        #     if self.alg_selection.get() == "Backpropagation":
-        #         print("Backprop!")
-        #         self.run_backprop()
-        #
-        #     if self.alg_selection.get() == "Genetic Algorithm":
-        #         self.run_GA()
-        #
-        #     if self.alg_selection.get() == u"\u03bc" + "+" + u"\u03bb" + " ES":
-        #         self.run_ES()
-        #
-        #     if self.alg_selection.get() == "Differential Evolution":
-        #         self.run_diff()
-        #
-        #     print("----------------------------------------")
+            if self.alg_selection.get() == "Backpropagation":
+                self.run_backprop()
+
+            if self.alg_selection.get() == "Genetic Algorithm":
+                self.run_GA()
+
+            if self.alg_selection.get() == u"\u03bc" + "+" + u"\u03bb" + " ES":
+                self.run_ES()
+
+            if self.alg_selection.get() == "Differential Evolution":
+                self.run_diff()
+
+            print("----------------------------------------")
 
         exit()
 
@@ -299,7 +300,7 @@ class build_GA_Menu(Frame):
                 RMSE.append(best_rmse)
 
             # GA parameter order: mutation rate, crossover rate, Num individuals for tournament, training data
-            ga_instance.evolve(0.2, 0.8, 15, self.training_data)
+            ga_instance.evolve(0.3, 0.8, 15, self.training_data)
 
         return best_network, RMSE
 
@@ -397,7 +398,6 @@ class build_GA_Menu(Frame):
             percent_accurate = self.accuracy(output_vals, true_vals)
             print("Percent Incorrect: %f\n" % percent_accurate)
 
-
         write = False
         for state in self.write_output.state():
             if state == "selected":
@@ -424,7 +424,7 @@ class build_GA_Menu(Frame):
                     true values and relevant statistics. '''
 
         user = getpass.getuser()
-        time_start = time.strftime("%m-%d:%H:%M:%S")
+        time_start = time.strftime("%m_%d_%H_%M_%S")
         print("Writing output at time: " + time_start)
 
         folder_dir = os.path.abspath("./outputs")
@@ -436,8 +436,11 @@ class build_GA_Menu(Frame):
             if e.errno != errno.EEXIST:
                 raise
 
-        file_name = folder_dir + "/" + user + "_" + self.alg_selection.get() + "_" + time_start + ".xlsx"
+        file_name = os.path.join(folder_dir, user + "_" + self.alg_selection.get() + "_" + time_start + ".xlsx")
         print("Writing output to " + file_name)
+
+        # wrt = csv.writer((open(file_name), "wb"))
+        # wrt.writerow([str(self.label_dict), "Input Values", "Network Output", "True Values", "Validation Error"])
 
         workbook = xlsxwriter.Workbook(file_name)
         worksheet = workbook.add_worksheet()
@@ -451,9 +454,9 @@ class build_GA_Menu(Frame):
 
         row = 5
         for i in range(len(input_vals)):
-            worksheet.write(row, 0, input_vals[i])
-            worksheet.write(row, 1, output_vals[i])
-            worksheet.write(row, 2, true_vals[i])
+            worksheet.write(row, 0, str(input_vals[i]))
+            worksheet.write(row, 1, str(output_vals[i]))
+            worksheet.write(row, 2, str(true_vals[i]))
             row += 1
 
         row = 5
@@ -464,11 +467,31 @@ class build_GA_Menu(Frame):
         workbook.close()
         print("Done writing file.")
 
+    # Method to print the parameters of a given test to the console
+    def print_starting_info(self):
+        if self.alg_selection.get() == "Genetic":
+            print("Starting training through Genetic Algorithm\n------------------------------------------------")
+
+            # Print out what was just done:
+            print("Nodes per hidden layer: %s" % self.nodes.get())
+            print("Activation function: %s" % self.actFunc.get())
+            print("Training generations: %s\n" % self.iterations.get())
+
+        if self.alg_selection.get() == "Backpropagation":
+            print("Starting training through Backpropagation\n------------------------------------------------")
+            print("Nodes per hidden layer: %s" % self.nodes.get())
+            print("Activation function: %s" % self.actFunc.get())
+            print("Update method: %s" % self.update_method.get())
+            print("Learning rate: %s" % self.learningRate.get())
+            print("Training iterations: %s\n" % self.iterations.get())
+
 
 if __name__ == '__main__':
     root = Tk()
     app = build_GA_Menu(root)
     root.mainloop()
+
+
 
     # test = Genetic.genetic_algorithm.create_instance(1000, [2, 5, 1], 'sigmoid', 'regression')
     #
