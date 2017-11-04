@@ -30,64 +30,74 @@ class build_GA_Menu(Frame):
         self.pack(fill=BOTH, expand=1)
 
         # Create entry for source URL
-        sourceLabel = Label(self, text="UCI source URL")
-        sourceLabel.grid(row=0, column=0)
+        #sourceLabel = Label(self, text="UCI source URL")
+        #sourceLabel.grid(row=0, column=0)
 
-        self.sourceURL = Entry(self)
-        self.sourceURL.grid(row=0, column=1)
+        #self.sourceURL = Entry(self)
+        #self.sourceURL.grid(row=0, column=1)
 
         # Create button to add a class label to a list
-        classButton = Button(self, text="Add Class Label", command=self.saveLabel)
-        classButton.grid(row=2, column=0)
+        #classButton = Button(self, text="Add Class Label", command=self.saveLabel)
+        #classButton.grid(row=2, column=0)
 
         # Entry for name of class label
-        self.labelEntry = Entry(self)
-        self.labelEntry.grid(row=2, column=1)
+        #self.labelEntry = Entry(self)
+        #self.labelEntry.grid(row=2, column=1)
 
-        labelName = Label(self, text="Class Label Name")
-        labelName.grid(row=1, column=1)
+        #labelName = Label(self, text="Class Label Name")
+        #labelName.grid(row=1, column=1)
 
         # Entry for number of features
-        self.featureNumber = Entry(self)
-        self.featureNumber.grid(row=3, column=1)
+        #self.featureNumber = Entry(self)
+        #self.featureNumber.grid(row=3, column=1)
 
-        feature = Label(self, text="How many features?")
-        feature.grid(row=3, column=0)
+        #feature = Label(self, text="How many features?")
+        #feature.grid(row=3, column=0)
 
         # Entry for number of instances
-        self.numInstances = Entry(self)
-        self.numInstances.grid(row=4, column=1)
+        #self.numInstances = Entry(self)
+        #self.numInstances.grid(row=4, column=1)
 
-        feature = Label(self, text="How many instances?")
-        feature.grid(row=4, column=0)
+        #feature = Label(self, text="How many instances?")
+        #feature.grid(row=4, column=0)
 
         # Problem type
-        problemLabel = Label(self, text="Problem Type")
-        problemLabel.grid(row=5, column=0)
-        options = ["classification", "regression"]
-        self.problem = StringVar(self.master)
-        self.problem.set("            ")
+        #problemLabel = Label(self, text="Problem Type")
+        #problemLabel.grid(row=5, column=0)
+        #options = ["classification", "regression"]
+        #self.problem = StringVar(self.master)
+        #self.problem.set("            ")
 
-        self.x = OptionMenu(self, self.problem, *options)
-        self.x.grid(row=5, column=1)
+        #self.x = OptionMenu(self, self.problem, *options)
+        #self.x.grid(row=5, column=1)
 
         # Where is label located in dataset? This will provide a menu to select a location
-        labelMenu = Label(self, text="Label Index")
-        labelMenu.grid(row=6, column=0)
+        #labelMenu = Label(self, text="Label Index")
+        #labelMenu.grid(row=6, column=0)
 
-        menuOptions = ["First", "Last"]
-        self.label_index = StringVar(self.master)
-        self.label_index.set("              ")
+        #menuOptions = ["First", "Last"]
+        #self.label_index = StringVar(self.master)
+        #self.label_index.set("              ")
 
-        self.y = OptionMenu(self, self.label_index, *menuOptions)
-        self.y.grid(row=6, column=1)
+        #self.y = OptionMenu(self, self.label_index, *menuOptions)
+        #self.y.grid(row=6, column=1)
+
+        #Menu for selecting the data set to be used
+        data_set_menu = Label(self, text="Data Set")
+        data_set_menu.grid(row=0, column=0)
+        data_options = ["Wine", "Abalone"]
+        self.data_choice = StringVar(self.master)
+        self.data_choice.set("              ")
+
+        self.data_selection = OptionMenu(self, self.data_choice, *data_options)
+        self.data_selection.grid(row=0, column=1)
 
         self.write_output = ttk.Checkbutton(self, text="Write Output")
-        self.write_output.grid(row=7, column=0)
+        self.write_output.grid(row=1, column=0)
 
         # Button to load data from UCI repository
-        loadButton = Button(self, text="Load!", command=self.loadAction)
-        loadButton.grid(row=7, column=1)
+        loadButton = Button(self, text="Load!", command=self.parse_data)
+        loadButton.grid(row=2, column=0)
 
         # Entry for number of iterations
         iterationsLabel = Label(self, text="Maximum iterations")
@@ -204,6 +214,58 @@ class build_GA_Menu(Frame):
 
         np.random.shuffle(self.data)
         print(self.data)
+
+    def parse_data(self):
+        ''' Given the selected dataset, load in the data from file
+            and select the appropriate problem type '''
+
+        if self.data_choice.get() == "Wine":
+            
+            print ("Loading wine...")
+            path = os.path.abspath("./data_sets/wine.txt")
+            f = open(path, 'r')
+            text = f.readlines()
+
+            for line in text:
+                label_dict = np.zeros(3)
+                temp_line = (line.strip().split(","))
+                if temp_line != ['']:
+                    label_dict[int(temp_line[0]) - 1] = 1
+                    self.data.append(trial_run([float(i) for i in temp_line[1:]], label_dict))
+            
+            f.close()
+
+            #need to set problem type = classification
+
+        elif self.data_choice.get() == "Abalone":
+
+            print ("Loading abalone...")
+            path = os.path.abspath("./data_sets/abalone.txt")
+            f = open(path, 'r')
+            text = f.readlines()
+
+            for line in text:
+                label_dict = np.zeros(29)
+                temp_line = (line.strip().split(","))
+
+                #Encode nominal value as float
+                if temp_line[0] == "M":
+                    temp_line[0] = 1.0
+                if temp_line[0] == "F":
+                    temp_line[0] = 2.0
+                if temp_line[0] == "I":
+                    temp_line[0] = 3.0
+
+                if temp_line != ['']:
+                    label_dict[int(temp_line[-1]) - 1] = 1
+                    self.data.append(trial_run([float(i) for i in temp_line[0:-1]], label_dict))
+            
+            f.close()
+
+            #need to set problem type = classification
+
+        np.random.shuffle(self.data)
+        #print(self.data)
 
     def saveLabel(self):
         self.label_dict[self.labelEntry.get()] = self.label_number

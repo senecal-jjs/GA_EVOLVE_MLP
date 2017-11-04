@@ -5,10 +5,11 @@ import random
 
 class DiffEvolution(Darwin):
 
-	#def __init__(self, beta):
-	#	self.beta = beta
-
 	def create_instance(beta, population_size, nodes_per_layer, activation_function, problem_type):
+		''' Create an instance of the DiffEvolution class using the 
+			Darwin default contructor, plus additional differential
+			evolution specific parameters '''
+
 		obj = DiffEvolution(population_size, nodes_per_layer, activation_function, problem_type)
 		obj.beta = beta
 		return obj 
@@ -43,7 +44,7 @@ class DiffEvolution(Darwin):
 			parents = self.select_parents()
 			parent1 = parents[0]
 			parent2 = self.mutate(parents[1:])
-			offspring = self.crossover(parent1, parent2)
+			offspring = self.binomial_crossover(parent1, parent2)
 			#new_pop.append(offspring)
 			self.parent_vs_offspring(parent1, offspring, validation_data)
 
@@ -56,11 +57,26 @@ class DiffEvolution(Darwin):
 		if self.fitness(offspring, validation_data) < self.fitness(parent, validation_data):
 			self.population[0] = offspring
 
+	def binomial_crossover(self, parent1, parent2):
+		''' Given two parents, perform binomial crossover '''
+
+		offspring = parent1
+		crossover_prob = 0.7 #This is tunable. 0.5 would result in uniform crossover
+		j_star = random.randint(0, len(parent1))
+
+		for j in range(len(parent1)):
+			
+			rand_prob = random.uniform(0, 1)
+
+			if rand_prob < crossover_prob or j == j_star:
+				offspring[j] = parent2[j]
+
+		return offspring
+
 
 if __name__ == '__main__':
-	test = DiffEvolution.create_instance(0.1, 4, [2, 2, 3, 1], "sigmoid", "classification")
-	#for i,ind in enumerate(test.population):
-	#	print ("Individual " + str(i) + ": " + str(ind))
-	net = test.create_mlp(test.population[0])
-	for layer in net.layers:
-		print (layer.weights)
+	test = DiffEvolution.create_instance(0.5, 4, [2, 2, 3, 1], "sigmoid", "classification")
+	parent1 = [2.1, 1, 3, 2.7, 1.82]
+	parent2 = [17.3, 19, 25, 21, 16.5]
+	offspring = test.binomial_crossover(parent1, parent2)
+	print (offspring)
