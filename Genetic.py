@@ -30,7 +30,7 @@ class genetic_algorithm(Darwin):
             offspring.append(children.child1)
             offspring.append(children.child2)
 
-        self.replace(offspring, "generational", validation_data)
+        self.replace(offspring, "fittest", validation_data)
 
     # Implementation of tournament based selection to choose parents, k = how many individuals compete in tournament
     def select_parents(self, k, validation_data):

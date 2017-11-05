@@ -446,6 +446,8 @@ class build_GA_Menu(Frame):
         worksheet = workbook.add_worksheet()
         worksheet.write('A1', "# File created at time " + time_start + " by " + user + " using " + self.alg_selection.get())
         worksheet.write('A2', "Label Key")
+        worksheet.write('A3', "Dataset URL or File")
+        worksheet.write('B3', self.sourceURL.get())
         worksheet.write('B2', str(self.label_dict))
         worksheet.write('A4', "Input Values")
         worksheet.write('B4', "Network Output")
@@ -465,11 +467,19 @@ class build_GA_Menu(Frame):
             row += 1
 
         workbook.close()
+
+        with open("Parameters.txt", "w") as text_file:
+            print("Nodes per hidden layer: {}".format(self.nodes.get()), file=text_file)
+            print("Activation Function: {}".format(self.actFunc.get()), file=text_file)
+            print("Training Iterations/Generations: {}".format(self.iterations.get()), file=text_file)
+            print("Update Method: {}".format(self.update_method.get()), file=text_file)
+            print("Learning rate: {}".format(self.learningRate.get()), file=text_file)
+
         print("Done writing file.")
 
     # Method to print the parameters of a given test to the console
     def print_starting_info(self):
-        if self.alg_selection.get() == "Genetic":
+        if self.alg_selection.get() == "Genetic Algorithm":
             print("Starting training through Genetic Algorithm\n------------------------------------------------")
 
             # Print out what was just done:
