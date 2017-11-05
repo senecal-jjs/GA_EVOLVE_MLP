@@ -227,7 +227,7 @@ class build_GA_Menu(Frame):
         #     self.run_GA()
         self.data = np.array(self.data)
         data_folds = np.array_split(self.data, 10)
-        self.print_starting_info() # Still needs to be implemented
+        self.print_starting_info()
 
         for i in range(10):
 
