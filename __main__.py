@@ -24,6 +24,7 @@ class build_GA_Menu(Frame):
         self.label_dict = {}
         self.label_number = 0
         self.data = []
+        self.test_error = []
         self.init_gui()
 
     def init_gui(self):
@@ -393,9 +394,11 @@ class build_GA_Menu(Frame):
 
         if self.problem.get() == "regression":
             error = self.rmse(output_vals, true_vals)
+            self.test_error.append(error)
             print("RMSE: %f\n" % error)
         elif self.problem.get() == "classification":
             percent_accurate = self.accuracy(output_vals, true_vals)
+            self.test_error.append(percent_accurate)
             print("Percent Incorrect: %f\n" % percent_accurate)
 
         write = False
@@ -453,6 +456,8 @@ class build_GA_Menu(Frame):
         worksheet.write('B4', "Network Output")
         worksheet.write('C4', "True Values")
         worksheet.write('D4', "Validation Error")
+        worksheet.write('E1', "Test error")
+        worksheet.write('F1', str(self.test_error))
 
         row = 5
         for i in range(len(input_vals)):
