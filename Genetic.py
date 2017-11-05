@@ -1,5 +1,6 @@
 import numpy as np
 import collections
+import validation_funcs as validation
 from Darwin import Darwin
 
 
@@ -11,6 +12,42 @@ class genetic_algorithm(Darwin):
         for i in range(len(obj.population)):
             obj.population[i].append(np.random.uniform(0, 1))
         return obj
+
+    def train(self, num_iterations : int, training_data, validation_data):
+        RMSE = []
+        best_network = object
+        best_rmse = 999
+
+        # For number of specified generations evolve the network population
+        for i in  range(num_iterations):
+            if i % 5 == 0:
+                # Calculate the rmse of the fittest individual in the population, and append to list of rmse at each
+                # generation
+                if self.problem.get() == "regression":
+                    print("Beginning generation " + str(i) + " of " + str(num_iterations) + "...with rmse of: " + str(best_rmse))
+                    if best_rmse < 2:
+                        break
+                elif self.problem.get() == "classification":
+                    print("Beginning generation " + str(i) + " of " + str(num_iterations) + "...percent incorrect: " + str(best_rmse))
+                    if best_rmse < 0.05: # 5% incorrect
+                        break
+
+                best_rmse = sys.maxsize
+                for individual in self.population:
+                    current_net = self.create_mlp(individual[0:-1])
+                    current_rmse = validation.validate_network(current_net, validation_data, self.problem_type)
+
+                    if current_rmse < best_rmse:
+                        best_rmse = current_rmse
+                        best_network = current_net
+
+                RMSE.append(best_rmse)
+
+            # GA parameter order: mutation rate, crossover rate, Num individuals for tournament, training data
+            self.evolve(0.2, 0.8, 15, training_data)
+
+        return best_network, RMSE
+
 
     def evolve(self, mutation_prob, crossover_prob, k, validation_data):
         np.random.shuffle(self.population)

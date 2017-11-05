@@ -18,6 +18,13 @@ class Darwin(ABC):
 		pass
 
 	@abstractmethod
+	def train(self, num_iterations, training_data):
+		"""Abstract method for doing the training. Returns the best network
+		that was produced.
+		"""
+		pass
+
+	@abstractmethod
 	def select_parents(self):
 		''' Abstract method for selecting the parents to use
 			for reproduction '''
