@@ -33,130 +33,150 @@ class build_GA_Menu(Frame):
 
         # Create entry for source URL
         sourceLabel = Label(self, text="UCI source URL")
-        sourceLabel.grid(row=0, column=0)
+        sourceLabel.grid(row=0, column=2)
 
         self.sourceURL = Entry(self)
-        self.sourceURL.grid(row=0, column=1)
+        self.sourceURL.grid(row=0, column=3)
 
         # Create button to add a class label to a list
         classButton = Button(self, text="Add Class Label", command=self.saveLabel)
-        classButton.grid(row=2, column=0)
+        classButton.grid(row=2, column=2)
 
         # Entry for name of class label
         self.labelEntry = Entry(self)
-        self.labelEntry.grid(row=2, column=1)
+        self.labelEntry.grid(row=2, column=3)
 
         labelName = Label(self, text="Class Label Name")
-        labelName.grid(row=1, column=1)
+        labelName.grid(row=1, column=3)
 
         # Entry for number of features
         self.featureNumber = Entry(self)
-        self.featureNumber.grid(row=3, column=1)
+        self.featureNumber.grid(row=3, column=3)
 
         feature = Label(self, text="How many features?")
-        feature.grid(row=3, column=0)
+        feature.grid(row=3, column=2)
 
         # Entry for number of instances
         self.numInstances = Entry(self)
-        self.numInstances.grid(row=4, column=1)
+        self.numInstances.grid(row=4, column=3)
 
         feature = Label(self, text="How many instances?")
-        feature.grid(row=4, column=0)
+        feature.grid(row=4, column=2)
 
         # Problem type
         problemLabel = Label(self, text="Problem Type")
-        problemLabel.grid(row=5, column=0)
+        problemLabel.grid(row=5, column=2)
         options = ["classification", "regression"]
         self.problem = StringVar(self.master)
         self.problem.set("            ")
 
         self.x = OptionMenu(self, self.problem, *options)
-        self.x.grid(row=5, column=1)
+        self.x.grid(row=5, column=3)
 
         # Where is label located in dataset? This will provide a menu to select a location
         labelMenu = Label(self, text="Label Index")
-        labelMenu.grid(row=6, column=0)
+        labelMenu.grid(row=6, column=2)
 
         menuOptions = ["First", "Last"]
         self.label_index = StringVar(self.master)
         self.label_index.set("              ")
 
         self.y = OptionMenu(self, self.label_index, *menuOptions)
-        self.y.grid(row=6, column=1)
-
-        self.write_output = ttk.Checkbutton(self, text="Write Output")
-        self.write_output.grid(row=7, column=0)
+        self.y.grid(row=6, column=3)
 
         # Button to load data from UCI repository
         loadButton = Button(self, text="Load!", command=self.loadAction)
-        loadButton.grid(row=7, column=1)
+        loadButton.grid(row=7, column=3)
+
+        # ============= LOAD LOCAL =====================================================================================
+
+        # Create label for load method
+        loadLabel = Label(self, text="Load Local File")
+        loadLabel.grid(row=0, column=0)
+
+        # Menu for selecting the data set to be used
+        data_options = ["Wine", "Abalone"]
+        self.data_choice = StringVar(self.master)
+        self.data_choice.set("              ")
+
+        self.data_selection = OptionMenu(self, self.data_choice, *data_options)
+        self.data_selection.grid(row=0, column=1)
+
+        # Button to load data from UCI repository
+        loadButton = Button(self, text="Load!", command=self.parse_data)
+        loadButton.grid(row=1, column=1)
 
         # Entry for number of iterations
         iterationsLabel = Label(self, text="Maximum iterations")
-        iterationsLabel.grid(row=0, column=2)
+        iterationsLabel.grid(row=0, column=4)
 
         self.iterations = Entry(self)
-        self.iterations.grid(row=0, column=3)
+        self.iterations.grid(row=0, column=5)
 
         # Number of nodes per layer
         nodesLabel = Label(self, text="Hidden Layer Nodes")
-        nodesLabel.grid(row=1, column=2)
+        nodesLabel.grid(row=1, column=4)
 
         self.nodes = Entry(self)
-        self.nodes.grid(row=1, column=3)
+        self.nodes.grid(row=1, column=5)
 
         # Activation function selection menu
         menuLabel = Label(self, text="Activation Function")
-        menuLabel.grid(row=2, column=2)
+        menuLabel.grid(row=2, column=4)
 
         menuOptions = ["sigmoid", "hyperbolic"]
         self.actFunc = StringVar(self.master)
         self.actFunc.set("              ")
 
         self.w = OptionMenu(self, self.actFunc, *menuOptions)
-        self.w.grid(row=2, column=3)
+        self.w.grid(row=2, column=5)
 
         # Learning rate
         learningLabel = Label(self, text="Learning Rate")
-        learningLabel.grid(row=3, column=2)
+        learningLabel.grid(row=3, column=4)
 
         self.learningRate = Entry(self)
-        self.learningRate.grid(row=3, column=3)
+        self.learningRate.grid(row=3, column=5)
 
         # Update method
         updateLabel = Label(self, text="Update method")
-        updateLabel.grid(row=4, column=2)
+        updateLabel.grid(row=4, column=4)
         update_options = ["incremental", "batch", "stochastic"]
         self.update_method = StringVar(self.master)
         self.update_method.set("            ")
 
         self.t = OptionMenu(self, self.update_method, *update_options)
-        self.t.grid(row=4, column=3)
+        self.t.grid(row=4, column=5)
 
         # Check box if the user wants to incorporate momentum in the weight updates
         self.use_momentum = ttk.Checkbutton(self, text="Momentum")
-        self.use_momentum.grid(row=5, column=2)
+        self.use_momentum.grid(row=5, column=4)
 
         # Beta value for momentum term in weight update
         beta_label = Label(self, text="Beta (if momentum selected)")
-        beta_label.grid(row=6, column=2)
+        beta_label.grid(row=6, column=4)
 
         self.beta = Entry(self)
-        self.beta.grid(row=6, column=3)
+        self.beta.grid(row=6, column=5)
 
         # Select which algorithm you want to use
         alg_label = Label(self, text="Algorithm Selection")
-        alg_label.grid(row=7, column=2)
-        alg_options = ["Backpropagation", "Genetic Algorithm", u"\u03bc" + "+" + u"\u03bb" + " ES", "Differential Evolution"]
+        alg_label.grid(row=7, column=4)
+        alg_options = ["Backpropagation", "Genetic Algorithm", u"\u03bc" + "+" + u"\u03bb" + " ES",
+                       "Differential Evolution"]
         self.alg_selection = StringVar(self.master)
         self.alg_selection.set("            ")
 
         self.z = OptionMenu(self, self.alg_selection, *alg_options)
-        self.z.grid(row=7, column=3)
+        self.z.grid(row=7, column=5)
+
+        # Checkbox to save results
+        self.write_output = ttk.Checkbutton(self, text="Write Output")
+        self.write_output.grid(row=8, column=4)
 
         # Button to build and start running network
         build = Button(self, text="Build and Run!", command=self.approx_function)
-        build.grid(row=8, column=3)
+        build.grid(row=8, column=5)
 
     # Using GUI inputs initialize the network structure
     def get_mlp_layers(self):
@@ -199,7 +219,7 @@ class build_GA_Menu(Frame):
                 elif self.problem.get() == "regression":
                     current_label = float(features_label[-1])
 
-                for j in range(len(features_label)-1):
+                for j in range(len(features_label) - 1):
                     features.append(float(features_label[j]))
 
             self.data.append(trial_run(features, current_label))
@@ -207,11 +227,62 @@ class build_GA_Menu(Frame):
         np.random.shuffle(self.data)
         print(self.data)
 
+    def parse_data(self):
+        ''' Given the selected dataset, load in the data from file
+            and select the appropriate problem type '''
+
+        if self.data_choice.get() == "Wine":
+
+            print("Loading wine...")
+            path = os.path.abspath("./data_sets/wine.txt")
+            f = open(path, 'r')
+            text = f.readlines()
+
+            for line in text:
+                label_dict = np.zeros(3)
+                temp_line = (line.strip().split(","))
+                if temp_line != ['']:
+                    label_dict[int(temp_line[0]) - 1] = 1
+                    self.data.append(trial_run([float(i) for i in temp_line[1:]], label_dict))
+
+            f.close()
+
+            # need to set problem type = classification
+
+        elif self.data_choice.get() == "Abalone":
+
+            print("Loading abalone...")
+            path = os.path.abspath("./data_sets/abalone.txt")
+            f = open(path, 'r')
+            text = f.readlines()
+
+            for line in text:
+                label_dict = np.zeros(29)
+                temp_line = (line.strip().split(","))
+
+                # Encode nominal value as float
+                if temp_line[0] == "M":
+                    temp_line[0] = 1.0
+                if temp_line[0] == "F":
+                    temp_line[0] = 2.0
+                if temp_line[0] == "I":
+                    temp_line[0] = 3.0
+
+                if temp_line != ['']:
+                    label_dict[int(temp_line[-1]) - 1] = 1
+                    self.data.append(trial_run([float(i) for i in temp_line[0:-1]], label_dict))
+
+            f.close()
+
+            # need to set problem type = classification
+
+        np.random.shuffle(self.data)
+        # print(self.data)
+
     def saveLabel(self):
         self.label_dict[self.labelEntry.get()] = self.label_number
         self.label_number += 1
         self.labelEntry.delete(0, END)
-        # print(self.label_dict)
 
     # ================== METHODS TO RUN AND TEST ALGORITHMS ============================================================
 
