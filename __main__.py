@@ -256,7 +256,7 @@ class build_GA_Menu(Frame):
                     pass
                     # alg_instance = DiffEvolution.DiffEvolution.create_instance(beta, pop_size, net_layers, self.actFunc.get(), self.problem.get())
                 # actually run the thing:
-                self.run_evloutionary_algorithm(alg_instance)
+                self.run_evolutionary_algorithm(alg_instance)
             print("----------------------------------------")
 
         exit()
@@ -267,7 +267,7 @@ class build_GA_Menu(Frame):
         net_rmse = self.train_backprop(net)
         self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
 
-    def run_evloutionary_algorithm(self, instance):
+    def run_evolutionary_algorithm(self, instance):
         net_layers = self.get_mlp_layers()
         net_rmse = instance.train(int(self.iterations.get()), self.training_data, self.validation_data)
         self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
