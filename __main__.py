@@ -12,6 +12,7 @@ import Darwin
 import Genetic
 import DiffEvolution
 import MLP
+import validation_funcs as validation
 
 trial_run = namedtuple('trial_run', ['inputs', 'solution'])
 
@@ -315,16 +316,19 @@ class build_GA_Menu(Frame):
 
             if self.alg_selection.get() == "Backpropagation":
                 self.run_backprop()
-
-            if self.alg_selection.get() == "Genetic Algorithm":
-                self.run_GA()
-
-            if self.alg_selection.get() == u"\u03bc" + "+" + u"\u03bb" + " ES":
-                self.run_ES()
-
-            if self.alg_selection.get() == "Differential Evolution":
-                self.run_diff()
-
+            else:
+                alg_instance = None
+                pop_size = 50
+                if self.alg_selection.get() == "Genetic Algorithm":
+                    alg_instance = Genetic.genetic_algorithm.create_instance(pop_size, net_layers, self.actFunc.get(), self.problem.get())
+                if self.alg_selection.get() == u"\u03bc" + "+" + u"\u03bb" + " ES":
+                    pass
+                    # alg_instance = Es.MuLambdaES.create_instance(mu, lamb, pop_size, net_layers, self.actFunc.get(), self.problem.get())
+                if self.alg_selection.get() == "Differential Evolution":
+                    pass
+                    # alg_instance = DiffEvolution.DiffEvolution.create_instance(beta, pop_size, net_layers, self.actFunc.get(), self.problem.get())
+                # actually run the thing:
+                self.run_evolutionary_algorithm(alg_instance)
             print("----------------------------------------")
 
         exit()
@@ -335,46 +339,10 @@ class build_GA_Menu(Frame):
         net_rmse = self.train_backprop(net)
         self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
 
-    def run_GA(self):
+    def run_evolutionary_algorithm(self, instance):
         net_layers = self.get_mlp_layers()
-        ga = Genetic.genetic_algorithm.create_instance(50, net_layers, self.actFunc.get(), self.problem.get())
-        net_rmse = self.train_GA(ga)
+        net_rmse = instance.train(int(self.iterations.get()), self.training_data, self.validation_data)
         self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
-
-    def train_GA(self, ga_instance):
-        RMSE = []
-        best_network = object
-        best_rmse = 999
-
-        # For number of specified generations evolve the network population
-        for i in range(int(self.iterations.get())):
-            if i % 5 == 0:
-                # Calculate the rmse of the fittest individual in the population, and append to list of rmse at each
-                # generation
-                if self.problem.get() == "regression":
-                    print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...with rmse of: " + str(best_rmse))
-                    if best_rmse < 2:
-                        break
-                elif self.problem.get() == "classification":
-                    print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...percent incorrect: " + str(best_rmse))
-                    if best_rmse < 0.05: # 5% incorrect
-                        break
-
-                best_rmse = sys.maxsize
-                for individual in ga_instance.population:
-                    current_net = ga_instance.create_mlp(individual[0:-1])
-                    current_rmse = self.validate_network(current_net)
-
-                    if current_rmse < best_rmse:
-                        best_rmse = current_rmse
-                        best_network = current_net
-
-                RMSE.append(best_rmse)
-
-            # GA parameter order: mutation rate, crossover rate, Num individuals for tournament, training data
-            ga_instance.evolve(0.3, 0.8, 15, self.training_data)
-
-        return best_network, RMSE
 
     # Train network using backpropagation
     def train_backprop(self, net):
@@ -416,31 +384,10 @@ class build_GA_Menu(Frame):
                 net.train_stochastic(self.training_data, batch_size, num_batches, learning, use_momentum=momentum,
                                      beta=beta)
 
-            error = self.validate_network(net)
+            error = validation.validate_network(net, self.validation_data, self.problem.get())
             RMSE.append(error)
 
         return net, RMSE
-
-    # Method to calculated the RMSE (error) on a validation data set during training
-    def validate_network(self, net):
-        output_vals = []
-        true_vals = [test.solution for test in self.validation_data]
-
-        for testInput in self.validation_data:
-            data_in = testInput.inputs
-            if self.problem.get() == "regression":
-                out_val = net.calculate_outputs(data_in)[0]
-            elif self.problem.get() == "classification":
-                out_val = net.calculate_outputs(data_in)
-
-            output_vals.append(out_val)
-
-        if self.problem.get() == "regression":
-            error = self.rmse(output_vals, true_vals)
-        elif self.problem.get() == "classification":
-            error = self.accuracy(output_vals, true_vals)
-
-        return error
 
     # Method to test the performance of the network on a test data set, after training has completed.
     def test_network(self, net, rmse_vals=None):
@@ -479,23 +426,10 @@ class build_GA_Menu(Frame):
         if write:
             self.create_csv(input_vals, output_vals, true_vals, rmse_vals);
 
-    # Method to calculated the RMSE (error) given an array of network outputs, and an array of the true values
-    def rmse(self, predicted, true):
-        return np.sqrt(((np.array(predicted) - np.array(true)) ** 2).mean())
-
-    def accuracy(self, predicted, true):
-        incorrect = 0
-        for i in range(len(predicted)):
-            predicted_index = np.argmax(predicted[i])
-            true_index = np.argmax(true[i])
-            if predicted_index != true_index:
-                incorrect += 1
-
-        return incorrect/len(predicted)
-
     def create_csv(self, input_vals, output_vals, true_vals, rmse_vals=None):
         ''' Create a csv file with the test inputs, calculated outputs,
-                    true values and relevant statistics. '''
+        true values and relevant statistics.
+        '''
 
         user = getpass.getuser()
         time_start = time.strftime("%m_%d_%H_%M_%S")
