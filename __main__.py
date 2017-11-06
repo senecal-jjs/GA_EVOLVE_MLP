@@ -98,7 +98,7 @@ class build_GA_Menu(Frame):
         loadLabel.grid(row=0, column=0)
 
         # Menu for selecting the data set to be used
-        data_options = ["Wine", "Abalone"]
+        data_options = ["Wine", "Abalone", "Concrete Slump"]
         self.data_choice = StringVar(self.master)
         self.data_choice.set("              ")
 
@@ -257,7 +257,6 @@ class build_GA_Menu(Frame):
 
             f.close()
             print("Wine loaded!")
-            self.problem_type = "classification"
 
         elif self.data_choice.get() == "Abalone":
             self.num_classes = 29
@@ -285,8 +284,12 @@ class build_GA_Menu(Frame):
                     self.data.append(trial_run([float(i) for i in temp_line[0:-1]], label_dict))
 
             f.close()
+            print("Abalone loaded!")
 
         elif self.data_choice.get() == "Concrete Slump":
+            self.num_classes = 1
+            self.num_features = 9
+
             print("Loading concrete slump...")
             path = os.path.abspath("./data_sets/concrete_slump.txt")
             f = open(path, 'r')
@@ -294,11 +297,11 @@ class build_GA_Menu(Frame):
 
             for line in text:
                 temp_line = line.strip().split(",")
-                self.data.append(trial_run([float(i) for i in temp_line[0:-1]], temp_line[-1]))
+                self.data.append(trial_run([float(i) for i in temp_line[0:-1]], float(temp_line[-1])))
 
             f.close()
-            print("Abalone loaded!")
-            self.problem_type == "classification"
+            print("Concrete slump loaded!")
+            print(self.data)
 
         np.random.shuffle(self.data)
 
