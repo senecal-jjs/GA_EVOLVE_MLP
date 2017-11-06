@@ -23,6 +23,9 @@ class build_GA_Menu(Frame):
         self.training_data = []
         self.label_dict = {}
         self.label_number = 0
+        self.num_classes = 0
+        self.num_features = 0
+        self.net_layers = []
         self.data = []
         self.test_error = []
         self.init_gui()
@@ -104,7 +107,9 @@ class build_GA_Menu(Frame):
 
         # Button to load data from UCI repository
         loadButton = Button(self, text="Load!", command=self.parse_data)
-        loadButton.grid(row=1, column=1)
+        loadButton.grid(row=2, column=1)
+
+        # ========= NETWORK PARAMETERS ========================================================
 
         # Entry for number of iterations
         iterationsLabel = Label(self, text="Maximum iterations")
@@ -181,17 +186,18 @@ class build_GA_Menu(Frame):
     # Using GUI inputs initialize the network structure
     def get_mlp_layers(self):
         nodes_per_layer = self.nodes.get().split(',')
-        layer_structure = [int(self.featureNumber.get())]
+        layer_structure = [self.num_features]
 
         for layer in nodes_per_layer:
             layer_structure.append(int(layer))
 
-        layer_structure.append(len(self.label_dict))
+        layer_structure.append(self.num_classes)
         return layer_structure
 
     # Load data from UCI repository and convert it to list of tuples(inputs, solution)
     def loadAction(self):
         url = self.sourceURL.get()
+        self.num_classes = len(self.label_dict)
 
         http = urllib3.PoolManager()
         response = http.request('GET', url)
@@ -224,6 +230,8 @@ class build_GA_Menu(Frame):
 
             self.data.append(trial_run(features, current_label))
 
+        self.num_features = self.featureNumber.get()
+        self.num_classes = len(self.label_dict)
         np.random.shuffle(self.data)
         print(self.data)
 
@@ -232,6 +240,8 @@ class build_GA_Menu(Frame):
             and select the appropriate problem type '''
 
         if self.data_choice.get() == "Wine":
+            self.num_classes = 3
+            self.num_features = 13
 
             print("Loading wine...")
             path = os.path.abspath("./data_sets/wine.txt")
@@ -246,10 +256,13 @@ class build_GA_Menu(Frame):
                     self.data.append(trial_run([float(i) for i in temp_line[1:]], label_dict))
 
             f.close()
-
-            # need to set problem type = classification
+            print("Wine loaded!")
+            # self.problem = "classification"
 
         elif self.data_choice.get() == "Abalone":
+            self.num_classes = 29
+            self.num_features = 8
+
             print("Loading abalone...")
             path = os.path.abspath("./data_sets/abalone.txt")
             f = open(path, 'r')
@@ -284,9 +297,10 @@ class build_GA_Menu(Frame):
                 self.data.append(trial_run([float(i) for i in temp_line[0:-1]], temp_line[-1]))
 
             f.close()
+            print("Abalone loaded!")
+            # self.problem == "classification"
 
         np.random.shuffle(self.data)
-        # print(self.data)
 
     def saveLabel(self):
         self.label_dict[self.labelEntry.get()] = self.label_number
