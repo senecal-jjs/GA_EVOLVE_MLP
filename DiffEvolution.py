@@ -43,7 +43,7 @@ class DiffEvolution(Darwin):
 			parents = self.select_parents()
 			parent1 = parents[0]
 			parent2 = self.mutate(parents[1:])
-			offspring = self.crossover(parent1, parent2)
+			offspring = self.binomial_crossover(parent1, parent2)
 			#new_pop.append(offspring)
 			self.parent_vs_offspring(parent1, offspring, validation_data)
 
@@ -55,6 +55,22 @@ class DiffEvolution(Darwin):
 
 		if self.fitness(offspring, validation_data) < self.fitness(parent, validation_data):
 			self.population[0] = offspring
+
+	def binomial_crossover(self, parent1, parent2):
+		''' Given two parents, perform binomial crossover '''
+
+		offspring = parent1
+		crossover_prob = 0.7 #This is tunable. 0.5 would result in uniform crossover
+		j_star = random.randint(0, len(parent1))
+
+		for j in range(len(parent1)):
+			
+			rand_prob = random.uniform(0, 1)
+
+			if rand_prob < crossover_prob or j == j_star:
+				offspring[j] = parent2[j]
+
+		return offspring
 
 
 if __name__ == '__main__':
