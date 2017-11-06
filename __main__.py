@@ -257,7 +257,7 @@ class build_GA_Menu(Frame):
 
             f.close()
             print("Wine loaded!")
-            # self.problem = "classification"
+            self.problem_type = "classification"
 
         elif self.data_choice.get() == "Abalone":
             self.num_classes = 29
@@ -298,7 +298,7 @@ class build_GA_Menu(Frame):
 
             f.close()
             print("Abalone loaded!")
-            # self.problem == "classification"
+            self.problem_type == "classification"
 
         np.random.shuffle(self.data)
 
@@ -364,6 +364,17 @@ class build_GA_Menu(Frame):
         net_rmse = self.train_GA(ga)
         self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
 
+    def run_diff(self):
+        ''' Given the parameters from the GUI, train the neural network
+            using differential evolution '''
+        net_layers = self.get_mlp_layers()
+        beta = 0.5 #Can tune this
+        population_size = 50 #This is tunable
+        diff_evol = DiffEvolution.DiffEvolution.create_instance(beta, population_size, net_layers, self.actFunc.get(), self.problem_type)
+
+        best_net = self.train_diff_evol(diff_evol)
+        self.test_network(best_net[0], rmse_vals=best_net[1])
+
     def train_GA(self, ga_instance):
         RMSE = []
         best_network = object
@@ -398,6 +409,43 @@ class build_GA_Menu(Frame):
             ga_instance.evolve(0.3, 0.8, 15, self.training_data)
 
         return best_network, RMSE
+
+    def train_diff_evol(self, de_instance):
+        ''' Train the neural net using differential evolution '''
+
+        best_rmse = 999
+        best_net = object
+        rmse_list = []
+
+        #Loop through specified # of generations, or until specific error rate is achieved
+        for i in range(int(self.iterations.get())):
+            if i % 5 == 0:
+                # Calculate the rmse of the fittest individual in the population, and append to list of rmse at each
+                # generation
+                if self.problem_type == "regression":
+                    print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...with rmse of: " + str(best_rmse))
+                    if best_rmse < 2:
+                        break
+                elif self.problem_type == "classification":
+                    print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...percent incorrect: " + str(best_rmse))
+                    if best_rmse < 0.05: # 5% incorrect
+                        break
+
+                best_rmse = sys.maxsize
+                for individual in de_instance.population:
+                    current_net = de_instance.create_mlp(individual)
+                    current_rmse = self.validate_network(current_net)
+                    #current_rmse = de_instance.fitness(individual, self.validation_data)
+
+                    if current_rmse < best_rmse:
+                        best_rmse = current_rmse
+                        best_network = current_net
+
+                rmse_list.append(best_rmse)
+
+            de_instance.evolve(self.training_data)
+
+        return best_network, rmse_list
 
     # Train network using backpropagation
     def train_backprop(self, net):
@@ -451,16 +499,16 @@ class build_GA_Menu(Frame):
 
         for testInput in self.validation_data:
             data_in = testInput.inputs
-            if self.problem.get() == "regression":
+            if self.problem.get() == "regression" or self.problem_type == "regression":
                 out_val = net.calculate_outputs(data_in)[0]
-            elif self.problem.get() == "classification":
+            elif self.problem.get() == "classification" or self.problem_type == "classification":
                 out_val = net.calculate_outputs(data_in)
 
             output_vals.append(out_val)
 
-        if self.problem.get() == "regression":
+        if self.problem.get() == "regression" or self.problem_type == "regression":
             error = self.rmse(output_vals, true_vals)
-        elif self.problem.get() == "classification":
+        elif self.problem.get() == "classification" or self.problem_type == "classification":
             error = self.accuracy(output_vals, true_vals)
 
         return error
@@ -479,18 +527,18 @@ class build_GA_Menu(Frame):
         for testInput in self.testing_data:
             data_in = testInput.inputs
             input_vals.append(data_in)
-            if self.problem.get() == "regression":
+            if self.problem.get() == "regression" or self.problem_type == "regression":
                 out_val = net.calculate_outputs(data_in)[0]
-            elif self.problem.get() == "classification":
+            elif self.problem.get() == "classification" or self.problem_type == "classification":
                 out_val = net.calculate_outputs(data_in)
 
             output_vals.append(out_val)
 
-        if self.problem.get() == "regression":
+        if self.problem.get() == "regression" or self.problem_type == "regression":
             error = self.rmse(output_vals, true_vals)
             self.test_error.append(error)
             print("RMSE: %f\n" % error)
-        elif self.problem.get() == "classification":
+        elif self.problem.get() == "classification" or self.problem_type == "classification":
             percent_accurate = self.accuracy(output_vals, true_vals)
             self.test_error.append(percent_accurate)
             print("Percent Incorrect: %f\n" % percent_accurate)
