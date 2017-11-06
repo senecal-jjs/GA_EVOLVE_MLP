@@ -230,7 +230,7 @@ class build_GA_Menu(Frame):
 
             self.data.append(trial_run(features, current_label))
 
-        self.num_features = self.featureNumber.get()
+        self.num_features = int(self.featureNumber.get())
         self.num_classes = len(self.label_dict)
         np.random.shuffle(self.data)
         print(self.data)
@@ -257,6 +257,7 @@ class build_GA_Menu(Frame):
 
             f.close()
             print("Wine loaded!")
+            print(self.data)
 
         elif self.data_choice.get() == "Abalone":
             self.num_classes = 29
@@ -502,16 +503,16 @@ class build_GA_Menu(Frame):
 
         for testInput in self.validation_data:
             data_in = testInput.inputs
-            if self.problem.get() == "regression" or self.problem_type == "regression":
+            if self.problem.get() == "regression":
                 out_val = net.calculate_outputs(data_in)[0]
-            elif self.problem.get() == "classification" or self.problem_type == "classification":
+            elif self.problem.get() == "classification":
                 out_val = net.calculate_outputs(data_in)
 
             output_vals.append(out_val)
 
-        if self.problem.get() == "regression" or self.problem_type == "regression":
+        if self.problem.get() == "regression":
             error = self.rmse(output_vals, true_vals)
-        elif self.problem.get() == "classification" or self.problem_type == "classification":
+        elif self.problem.get() == "classification":
             error = self.accuracy(output_vals, true_vals)
 
         return error
@@ -530,18 +531,18 @@ class build_GA_Menu(Frame):
         for testInput in self.testing_data:
             data_in = testInput.inputs
             input_vals.append(data_in)
-            if self.problem.get() == "regression" or self.problem_type == "regression":
+            if self.problem.get() == "regression":
                 out_val = net.calculate_outputs(data_in)[0]
-            elif self.problem.get() == "classification" or self.problem_type == "classification":
+            elif self.problem.get() == "classification":
                 out_val = net.calculate_outputs(data_in)
 
             output_vals.append(out_val)
 
-        if self.problem.get() == "regression" or self.problem_type == "regression":
+        if self.problem.get() == "regression":
             error = self.rmse(output_vals, true_vals)
             self.test_error.append(error)
             print("RMSE: %f\n" % error)
-        elif self.problem.get() == "classification" or self.problem_type == "classification":
+        elif self.problem.get() == "classification":
             percent_accurate = self.accuracy(output_vals, true_vals)
             self.test_error.append(percent_accurate)
             print("Percent Incorrect: %f\n" % percent_accurate)
