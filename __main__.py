@@ -250,7 +250,6 @@ class build_GA_Menu(Frame):
             # need to set problem type = classification
 
         elif self.data_choice.get() == "Abalone":
-
             print("Loading abalone...")
             path = os.path.abspath("./data_sets/abalone.txt")
             f = open(path, 'r')
@@ -274,7 +273,17 @@ class build_GA_Menu(Frame):
 
             f.close()
 
-            # need to set problem type = classification
+        elif self.data_choice.get() == "Concrete Slump":
+            print("Loading concrete slump...")
+            path = os.path.abspath("./data_sets/concrete_slump.txt")
+            f = open(path, 'r')
+            text = f.readlines()
+
+            for line in text:
+                temp_line = line.strip().split(",")
+                self.data.append(trial_run([float(i) for i in temp_line[0:-1]], temp_line[-1]))
+
+            f.close()
 
         np.random.shuffle(self.data)
         # print(self.data)
