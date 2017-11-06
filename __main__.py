@@ -257,7 +257,7 @@ class build_GA_Menu(Frame):
 
             f.close()
             print("Wine loaded!")
-            print(self.data)
+            #print(self.data)
 
         elif self.data_choice.get() == "Abalone":
             self.num_classes = 29
@@ -302,7 +302,7 @@ class build_GA_Menu(Frame):
 
             f.close()
             print("Concrete slump loaded!")
-            print(self.data)
+            #print(self.data)
 
         np.random.shuffle(self.data)
 
@@ -374,7 +374,7 @@ class build_GA_Menu(Frame):
         net_layers = self.get_mlp_layers()
         beta = 0.5 #Can tune this
         population_size = 50 #This is tunable
-        diff_evol = DiffEvolution.DiffEvolution.create_instance(beta, population_size, net_layers, self.actFunc.get(), self.problem_type)
+        diff_evol = DiffEvolution.DiffEvolution.create_instance(beta, population_size, net_layers, self.actFunc.get(), self.problem.get())
 
         best_net = self.train_diff_evol(diff_evol)
         self.test_network(best_net[0], rmse_vals=best_net[1])
@@ -423,14 +423,14 @@ class build_GA_Menu(Frame):
 
         #Loop through specified # of generations, or until specific error rate is achieved
         for i in range(int(self.iterations.get())):
-            if i % 5 == 0:
+            if i % 1 == 0:
                 # Calculate the rmse of the fittest individual in the population, and append to list of rmse at each
                 # generation
-                if self.problem_type == "regression":
+                if self.problem.get() == "regression":
                     print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...with rmse of: " + str(best_rmse))
                     if best_rmse < 2:
                         break
-                elif self.problem_type == "classification":
+                elif self.problem.get() == "classification":
                     print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...percent incorrect: " + str(best_rmse))
                     if best_rmse < 0.05: # 5% incorrect
                         break
