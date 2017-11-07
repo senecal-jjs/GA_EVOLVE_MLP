@@ -98,7 +98,7 @@ class build_GA_Menu(Frame):
         loadLabel.grid(row=0, column=0)
 
         # Menu for selecting the data set to be used
-        data_options = ["Wine", "Abalone", "Concrete Slump"]
+        data_options = ["Wine", "Abalone", "Concrete Slump", "Yacht", "Letter Recognition"]
         self.data_choice = StringVar(self.master)
         self.data_choice.set("              ")
 
@@ -249,7 +249,7 @@ class build_GA_Menu(Frame):
             text = f.readlines()
 
             for line in text:
-                label_dict = np.zeros(3)
+                label_dict = np.zeros(self.num_classes)
                 temp_line = (line.strip().split(","))
                 if temp_line != ['']:
                     label_dict[int(temp_line[0]) - 1] = 1
@@ -269,7 +269,7 @@ class build_GA_Menu(Frame):
             text = f.readlines()
 
             for line in text:
-                label_dict = np.zeros(29)
+                label_dict = np.zeros(self.num_classes)
                 temp_line = (line.strip().split(","))
 
                 # Encode nominal value 3 binary features
@@ -310,6 +310,43 @@ class build_GA_Menu(Frame):
             f.close()
             print("Concrete slump loaded!")
             #print(self.data)
+
+        elif self.data_choice.get() == "Yacht":
+            self.num_classes = 1
+            self.num_features = 6
+
+            print("Loading yacht...")
+            path = os.path.abspath("./data_sets/yacht.txt")
+            f = open(path, 'r')
+            text = f.readlines()
+
+            for line in text:
+                temp_line = line.strip().split(",")
+                self.data.append(trial_run([float(i) for i in temp_line[0:-1]], float(temp_line[-1])))
+
+            f.close()
+            print("Yacht loaded!")
+            #print(self.data)
+
+        if self.data_choice.get() == "Letter Recognition":
+            self.num_classes = 26
+            self.num_features = 16
+
+            print("Loading letter recognition...")
+            path = os.path.abspath("./data_sets/letters.txt")
+            f = open(path, 'r')
+            text = f.readlines()
+
+            for line in text:
+                label_dict = np.zeros(self.num_classes)
+                temp_line = (line.strip().split(","))
+                if temp_line != ['']:
+                    label_dict[ord(temp_line[0]) - 65] = 1
+                    self.data.append(trial_run([float(i) for i in temp_line[1:]], label_dict))
+            f.close()
+            print("Letter recognition loaded!")
+            #print(self.data)
+
 
         np.random.shuffle(self.data)
         #For large datasets, take a random sample of 1000 instances
