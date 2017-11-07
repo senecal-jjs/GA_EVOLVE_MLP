@@ -60,7 +60,7 @@ class DiffEvolution(Darwin):
 		for weight in parent1:
 			offspring.append(weight)
 
-		crossover_prob = 0.7 #This is tunable. 0.5 would result in uniform crossover
+		crossover_prob = 0.35 #This is tunable. 0.5 would result in uniform crossover
 		j_star = random.randint(0, len(parent1))
 
 		for j in range(len(parent1)):
