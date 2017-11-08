@@ -164,24 +164,31 @@ class build_GA_Menu(Frame):
         self.beta = Entry(self)
         self.beta.grid(row=6, column=5)
 
+        # lambda for the evolution strategy
+        lambda_label = Label(self, text=u"\u03bb (if \u03bc + \u03bb  selected)")
+        lambda_label.grid(row=7, column=4)
+
+        self.lambda_entry = Entry(self)
+        self.lambda_entry.grid(row=7, column=5)
+
         # Select which algorithm you want to use
         alg_label = Label(self, text="Algorithm Selection")
-        alg_label.grid(row=7, column=4)
+        alg_label.grid(row=8, column=4)
         alg_options = ["Backpropagation", "Genetic Algorithm", u"\u03bc" + "+" + u"\u03bb" + " ES",
                        "Differential Evolution"]
         self.alg_selection = StringVar(self.master)
         self.alg_selection.set("            ")
 
         self.z = OptionMenu(self, self.alg_selection, *alg_options)
-        self.z.grid(row=7, column=5)
+        self.z.grid(row=8, column=5)
 
         # Checkbox to save results
         self.write_output = ttk.Checkbutton(self, text="Write Output")
-        self.write_output.grid(row=8, column=4)
+        self.write_output.grid(row=9, column=4)
 
         # Button to build and start running network
         build = Button(self, text="Build and Run!", command=self.approx_function)
-        build.grid(row=8, column=5)
+        build.grid(row=9, column=5)
 
     # Using GUI inputs initialize the network structure
     def get_mlp_layers(self):

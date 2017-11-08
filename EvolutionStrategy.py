@@ -1,18 +1,18 @@
 import numpy as np
 import math
+import Darwin
 from collections import namedtuple
 
 
-class MuLambda(Darwin):
-"""Population for MuLambda is different from the superclass:
-each individual is a namedtuple(genes, sigmas).
-"""
+class EvolutionStrategy(Darwin):
+    """Population for EvolutionStrategy is different from the superclass:
+    each individual is a namedtuple(genes, sigmas).
+    """
 
-    Individual = namedtuple('Individual', genes, sigmas)
+    Individual = namedtuple('Individual', ['genes', 'sigmas'])
 
-    def create_instance(mu, lamb, pop_size, nodes_per_layer, actFunc, problem_type):
-        obj = MuLambda(pop_size, nodes_per_layer, actFunc, problem_type)
-        obj.mu = mu
+    def create_instance(lamb, pop_size, nodes_per_layer, actFunc, problem_type):
+        obj = EvolutionStrategy(pop_size, nodes_per_layer, actFunc, problem_type)
         obj.lamb = lamb
         # for the local varience:
         # r values chosen based off of Back and Schwefel (1993)
@@ -29,7 +29,7 @@ each individual is a namedtuple(genes, sigmas).
             # add the sigma values
             # initial sigma suggested to be ~3.0 (Thomas Back, 1996)
             sigmas = np.ones(len(i)) * 3.0
-            pop.append(MuLambda.Individual(genes=i,sigmas=sigmas))
+            pop.append(EvolutionStrategy.Individual(genes=i,sigmas=sigmas))
         return pop
 
     def _loc_new_sigma(indiv):
@@ -79,6 +79,13 @@ each individual is a namedtuple(genes, sigmas).
         else:
             self.global_es(validation_data)
         t = t + 1
+
+    def train(self, num_iterations, training_data, validation_data):
+        """Trains the network.
+        """
+        for i in range(num_iterations):
+            for ind in self.population:
+                self.evolve()
 
     def select_parents(self):
         """ This function is not needed for the current version of the algorithm, and
