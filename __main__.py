@@ -9,6 +9,7 @@ import csv
 import os, errno, getpass # for file writing
 import time
 import Darwin
+import EvolutionStrategy as ES
 import Genetic
 import DiffEvolution
 import MLP
@@ -164,24 +165,31 @@ class build_GA_Menu(Frame):
         self.beta = Entry(self)
         self.beta.grid(row=6, column=5)
 
+        # lambda for the evolution strategy
+        pop_size_label = Label(self, text=u"Population size (if \u03bc + \u03bb  selected)")
+        pop_size_label.grid(row=7, column=4)
+
+        self.pop_size = Entry(self)
+        self.pop_size.grid(row=7, column=5)
+
         # Select which algorithm you want to use
         alg_label = Label(self, text="Algorithm Selection")
-        alg_label.grid(row=7, column=4)
+        alg_label.grid(row=8, column=4)
         alg_options = ["Backpropagation", "Genetic Algorithm", u"\u03bc" + "+" + u"\u03bb" + " ES",
                        "Differential Evolution"]
         self.alg_selection = StringVar(self.master)
         self.alg_selection.set("            ")
 
         self.z = OptionMenu(self, self.alg_selection, *alg_options)
-        self.z.grid(row=7, column=5)
+        self.z.grid(row=8, column=5)
 
         # Checkbox to save results
         self.write_output = ttk.Checkbutton(self, text="Write Output")
-        self.write_output.grid(row=8, column=4)
+        self.write_output.grid(row=9, column=4)
 
         # Button to build and start running network
         build = Button(self, text="Build and Run!", command=self.approx_function)
-        build.grid(row=8, column=5)
+        build.grid(row=9, column=5)
 
     # Using GUI inputs initialize the network structure
     def get_mlp_layers(self):
@@ -416,6 +424,13 @@ class build_GA_Menu(Frame):
         net_rmse = self.train_GA(ga)
         self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
 
+    def run_ES(self):
+        net_layers = self.get_mlp_layers()
+        pop_size = int(self.pop_size.get())
+        es = ES.EvolutionStrategy.create_instance(pop_size, pop_size * 7, net_layers, self.actFunc.get(), self.problem.get())
+        net_rmse = self.train_ES(es)
+        self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
+
     def run_diff(self):
         ''' Given the parameters from the GUI, train the neural network
             using differential evolution '''
@@ -426,6 +441,44 @@ class build_GA_Menu(Frame):
 
         best_net = self.train_diff_evol(diff_evol)
         self.test_network(best_net[0], rmse_vals=best_net[1])
+
+
+    # should really be a class method, but my partners don't want to change it:
+    def train_ES(self, es_instance):
+        RMSE = []
+        best_network = object
+        best_rmse = 999
+        # For number of specified generations evolve the network population
+        for i in range(int(self.iterations.get())):
+            if i % 5 == 0:
+                # Calculate the rmse of the fittest individual in the population, and append to list of rmse at each
+                # generation
+                if self.problem.get() == "regression":
+                    print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...with rmse of: " + str(best_rmse))
+                    if best_rmse < 2:
+                        break
+                elif self.problem.get() == "classification":
+                    print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...percent incorrect: " + str(best_rmse))
+                    if best_rmse < 0.05: # 5% incorrect
+                        break
+
+                best_rmse = sys.maxsize
+                for individual in es_instance.population:
+                    current_net = es_instance.create_mlp(individual)
+                    current_rmse = self.validate_network(current_net)
+
+                    if current_rmse < best_rmse:
+                        best_rmse = current_rmse
+                        best_network = current_net
+
+                RMSE.append(best_rmse)
+
+            # GA parameter order: mutation rate, crossover rate, Num individuals for tournament, training data
+            es_instance.evolve(self.training_data)
+
+        return best_network, RMSE
+
+
 
     def train_GA(self, ga_instance):
         RMSE = []
