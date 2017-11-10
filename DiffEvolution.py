@@ -44,10 +44,7 @@ class DiffEvolution(Darwin):
 			parent1 = parents[0]
 			parent2 = self.mutate(parents[1:])
 			offspring = self.binomial_crossover(parent1, parent2)
-			#new_pop.append(offspring)
 			self.parent_vs_offspring(parent1, offspring, validation_data)
-
-		#self.replace(new_pop, "fittest")
 
 	def parent_vs_offspring(self, parent, offspring, validation_data):
 		''' Compare the parent and the offspring. The fitter of the
@@ -59,8 +56,11 @@ class DiffEvolution(Darwin):
 	def binomial_crossover(self, parent1, parent2):
 		''' Given two parents, perform binomial crossover '''
 
-		offspring = parent1
-		crossover_prob = 0.7 #This is tunable. 0.5 would result in uniform crossover
+		offspring = []
+		for weight in parent1:
+			offspring.append(weight)
+
+		crossover_prob = 0.35 #This is tunable. 0.5 would result in uniform crossover
 		j_star = random.randint(0, len(parent1))
 
 		for j in range(len(parent1)):
@@ -71,12 +71,3 @@ class DiffEvolution(Darwin):
 				offspring[j] = parent2[j]
 
 		return offspring
-
-
-if __name__ == '__main__':
-	test = DiffEvolution.create_instance(0.1, 4, [2, 2, 3, 1], "sigmoid", "classification")
-	#for i,ind in enumerate(test.population):
-	#	print ("Individual " + str(i) + ": " + str(ind))
-	net = test.create_mlp(test.population[0])
-	for layer in net.layers:
-		print (layer.weights)

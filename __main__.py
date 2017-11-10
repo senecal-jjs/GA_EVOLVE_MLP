@@ -9,6 +9,7 @@ import csv
 import os, errno, getpass # for file writing
 import time
 import Darwin
+import EvolutionStrategy as ES
 import Genetic
 import DiffEvolution
 import MLP
@@ -100,7 +101,7 @@ class build_GA_Menu(Frame):
         loadLabel.grid(row=0, column=0)
 
         # Menu for selecting the data set to be used
-        data_options = ["Wine", "Abalone", "Concrete Slump"]
+        data_options = ["Wine", "Abalone", "Concrete Slump", "Yacht", "Letter Recognition"]
         self.data_choice = StringVar(self.master)
         self.data_choice.set("              ")
 
@@ -168,24 +169,31 @@ class build_GA_Menu(Frame):
         self.beta = Entry(self)
         self.beta.grid(row=6, column=5)
 
+        # lambda for the evolution strategy
+        pop_size_label = Label(self, text=u"Population size (if \u03bc + \u03bb  selected)")
+        pop_size_label.grid(row=7, column=4)
+
+        self.pop_size = Entry(self)
+        self.pop_size.grid(row=7, column=5)
+
         # Select which algorithm you want to use
         alg_label = Label(self, text="Algorithm Selection")
-        alg_label.grid(row=7, column=4)
+        alg_label.grid(row=8, column=4)
         alg_options = ["Backpropagation", "Genetic Algorithm", u"\u03bc" + "+" + u"\u03bb" + " ES",
                        "Differential Evolution"]
         self.alg_selection = StringVar(self.master)
         self.alg_selection.set("            ")
 
         self.z = OptionMenu(self, self.alg_selection, *alg_options)
-        self.z.grid(row=7, column=5)
+        self.z.grid(row=8, column=5)
 
         # Checkbox to save results
         self.write_output = ttk.Checkbutton(self, text="Write Output")
-        self.write_output.grid(row=8, column=4)
+        self.write_output.grid(row=9, column=4)
 
         # Button to build and start running network
         build = Button(self, text="Build and Run!", command=self.approx_function)
-        build.grid(row=8, column=5)
+        build.grid(row=9, column=5)
 
     # Using GUI inputs initialize the network structure
     def get_mlp_layers(self):
@@ -234,7 +242,7 @@ class build_GA_Menu(Frame):
 
             self.data.append(trial_run(features, current_label))
 
-        self.num_features = self.featureNumber.get()
+        self.num_features = int(self.featureNumber.get())
         self.num_classes = len(self.label_dict)
         np.random.shuffle(self.data)
         print(self.data)
@@ -253,7 +261,7 @@ class build_GA_Menu(Frame):
             text = f.readlines()
 
             for line in text:
-                label_dict = np.zeros(3)
+                label_dict = np.zeros(self.num_classes)
                 temp_line = (line.strip().split(","))
                 if temp_line != ['']:
                     label_dict[int(temp_line[0]) - 1] = 1
@@ -261,10 +269,11 @@ class build_GA_Menu(Frame):
 
             f.close()
             print("Wine loaded!")
+            #print(self.data)
 
         elif self.data_choice.get() == "Abalone":
             self.num_classes = 29
-            self.num_features = 8
+            self.num_features = 10
 
             print("Loading abalone...")
             path = os.path.abspath("./data_sets/abalone.txt")
@@ -272,16 +281,22 @@ class build_GA_Menu(Frame):
             text = f.readlines()
 
             for line in text:
-                label_dict = np.zeros(29)
+                label_dict = np.zeros(self.num_classes)
                 temp_line = (line.strip().split(","))
 
-                # Encode nominal value as float
+                # Encode nominal value 3 binary features
                 if temp_line[0] == "M":
                     temp_line[0] = 1.0
+                    temp_line.insert(0, -1.0)
+                    temp_line.insert(0, -1.0)
                 if temp_line[0] == "F":
-                    temp_line[0] = 2.0
+                    temp_line[0] = -1.0
+                    temp_line.insert(0, 1.0)
+                    temp_line.insert(0, -1.0)
                 if temp_line[0] == "I":
-                    temp_line[0] = 3.0
+                    temp_line[0] = -1.0
+                    temp_line.insert(0, -1.0)
+                    temp_line.insert(0, 1.0)
 
                 if temp_line != ['']:
                     label_dict[int(temp_line[-1]) - 1] = 1
@@ -289,6 +304,7 @@ class build_GA_Menu(Frame):
 
             f.close()
             print("Abalone loaded!")
+            #print (self.data)
 
         elif self.data_choice.get() == "Concrete Slump":
             self.num_classes = 1
@@ -305,9 +321,50 @@ class build_GA_Menu(Frame):
 
             f.close()
             print("Concrete slump loaded!")
-            print(self.data)
+            #print(self.data)
+
+        elif self.data_choice.get() == "Yacht":
+            self.num_classes = 1
+            self.num_features = 6
+
+            print("Loading yacht...")
+            path = os.path.abspath("./data_sets/yacht.txt")
+            f = open(path, 'r')
+            text = f.readlines()
+
+            for line in text:
+                temp_line = line.strip().split(",")
+                self.data.append(trial_run([float(i) for i in temp_line[0:-1]], float(temp_line[-1])))
+
+            f.close()
+            print("Yacht loaded!")
+            #print(self.data)
+
+        if self.data_choice.get() == "Letter Recognition":
+            self.num_classes = 26
+            self.num_features = 16
+
+            print("Loading letter recognition...")
+            path = os.path.abspath("./data_sets/letters.txt")
+            f = open(path, 'r')
+            text = f.readlines()
+
+            for line in text:
+                label_dict = np.zeros(self.num_classes)
+                temp_line = (line.strip().split(","))
+                if temp_line != ['']:
+                    label_dict[ord(temp_line[0]) - 65] = 1
+                    self.data.append(trial_run([float(i) for i in temp_line[1:]], label_dict))
+            f.close()
+            print("Letter recognition loaded!")
+            #print(self.data)
+
 
         np.random.shuffle(self.data)
+        #For large datasets, take a random sample of 1000 instances
+        if len(self.data) > 1000:
+            self.data = self.data[0: 1000]
+
 
     def saveLabel(self):
         self.label_dict[self.labelEntry.get()] = self.label_number
@@ -371,16 +428,61 @@ class build_GA_Menu(Frame):
         net_rmse = self.train_GA(ga)
         self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
 
+    def run_ES(self):
+        net_layers = self.get_mlp_layers()
+        pop_size = int(self.pop_size.get())
+        es = ES.EvolutionStrategy.create_instance(pop_size, pop_size * 7, net_layers, self.actFunc.get(), self.problem.get())
+        net_rmse = self.train_ES(es)
+        self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
+
     def run_diff(self):
         ''' Given the parameters from the GUI, train the neural network
             using differential evolution '''
         net_layers = self.get_mlp_layers()
         beta = 0.5 #Can tune this
-        population_size = 50 #This is tunable
-        diff_evol = DiffEvolution.DiffEvolution.create_instance(beta, population_size, net_layers, self.actFunc.get(), self.problem_type)
+        population_size = self.num_features * 10 #This is tunable
+        diff_evol = DiffEvolution.DiffEvolution.create_instance(beta, population_size, net_layers, self.actFunc.get(), self.problem.get())
 
         best_net = self.train_diff_evol(diff_evol)
         self.test_network(best_net[0], rmse_vals=best_net[1])
+
+
+    # should really be a class method, but my partners don't want to change it:
+    def train_ES(self, es_instance):
+        RMSE = []
+        best_network = object
+        best_rmse = 999
+        # For number of specified generations evolve the network population
+        for i in range(int(self.iterations.get())):
+            if i % 5 == 0:
+                # Calculate the rmse of the fittest individual in the population, and append to list of rmse at each
+                # generation
+                if self.problem.get() == "regression":
+                    print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...with rmse of: " + str(best_rmse))
+                    if best_rmse < 2:
+                        break
+                elif self.problem.get() == "classification":
+                    print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...percent incorrect: " + str(best_rmse))
+                    if best_rmse < 0.05: # 5% incorrect
+                        break
+
+                best_rmse = sys.maxsize
+                for individual in es_instance.population:
+                    current_net = es_instance.create_mlp(individual)
+                    current_rmse = self.validate_network(current_net)
+
+                    if current_rmse < best_rmse:
+                        best_rmse = current_rmse
+                        best_network = current_net
+
+                RMSE.append(best_rmse)
+
+            # GA parameter order: mutation rate, crossover rate, Num individuals for tournament, training data
+            es_instance.evolve(self.training_data)
+
+        return best_network, RMSE
+
+
 
     def train_GA(self, ga_instance):
         RMSE = []
@@ -426,14 +528,14 @@ class build_GA_Menu(Frame):
 
         #Loop through specified # of generations, or until specific error rate is achieved
         for i in range(int(self.iterations.get())):
-            if i % 5 == 0:
+            if i % 1 == 0:
                 # Calculate the rmse of the fittest individual in the population, and append to list of rmse at each
                 # generation
-                if self.problem_type == "regression":
+                if self.problem.get() == "regression":
                     print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...with rmse of: " + str(best_rmse))
                     if best_rmse < 2:
                         break
-                elif self.problem_type == "classification":
+                elif self.problem.get() == "classification":
                     print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...percent incorrect: " + str(best_rmse))
                     if best_rmse < 0.05: # 5% incorrect
                         break
