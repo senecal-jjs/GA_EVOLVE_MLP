@@ -91,7 +91,9 @@ class build_GA_Menu(Frame):
         loadButton = Button(self, text="Load!", command=self.loadAction)
         loadButton.grid(row=7, column=3)
 
-        # ============= LOAD LOCAL =====================================================================================
+        # ================================================================================================
+        #          LOAD LOCAL
+        #  ===============================================================================================
 
         # Create label for load method
         loadLabel = Label(self, text="Load Local File")
@@ -109,7 +111,9 @@ class build_GA_Menu(Frame):
         loadButton = Button(self, text="Load!", command=self.parse_data)
         loadButton.grid(row=2, column=1)
 
-        # ========= NETWORK PARAMETERS ========================================================
+        # ==================================================================================================
+        #        NETWORK PARAMETERS
+        # ==================================================================================================
 
         # Entry for number of iterations
         iterationsLabel = Label(self, text="Maximum iterations")
@@ -502,16 +506,16 @@ class build_GA_Menu(Frame):
 
         for testInput in self.validation_data:
             data_in = testInput.inputs
-            if self.problem.get() == "regression" or self.problem_type == "regression":
+            if self.problem.get() == "regression":
                 out_val = net.calculate_outputs(data_in)[0]
-            elif self.problem.get() == "classification" or self.problem_type == "classification":
+            elif self.problem.get() == "classification":
                 out_val = net.calculate_outputs(data_in)
 
             output_vals.append(out_val)
 
-        if self.problem.get() == "regression" or self.problem_type == "regression":
+        if self.problem.get() == "regression":
             error = self.rmse(output_vals, true_vals)
-        elif self.problem.get() == "classification" or self.problem_type == "classification":
+        elif self.problem.get() == "classification":
             error = self.accuracy(output_vals, true_vals)
 
         return error
@@ -530,18 +534,18 @@ class build_GA_Menu(Frame):
         for testInput in self.testing_data:
             data_in = testInput.inputs
             input_vals.append(data_in)
-            if self.problem.get() == "regression" or self.problem_type == "regression":
+            if self.problem.get() == "regression":
                 out_val = net.calculate_outputs(data_in)[0]
-            elif self.problem.get() == "classification" or self.problem_type == "classification":
+            elif self.problem.get() == "classification":
                 out_val = net.calculate_outputs(data_in)
 
             output_vals.append(out_val)
 
-        if self.problem.get() == "regression" or self.problem_type == "regression":
+        if self.problem.get() == "regression":
             error = self.rmse(output_vals, true_vals)
             self.test_error.append(error)
             print("RMSE: %f\n" % error)
-        elif self.problem.get() == "classification" or self.problem_type == "classification":
+        elif self.problem.get() == "classification":
             percent_accurate = self.accuracy(output_vals, true_vals)
             self.test_error.append(percent_accurate)
             print("Percent Incorrect: %f\n" % percent_accurate)
