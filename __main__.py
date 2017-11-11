@@ -245,7 +245,6 @@ class build_GA_Menu(Frame):
         self.num_features = int(self.featureNumber.get())
         self.num_classes = len(self.label_dict)
         np.random.shuffle(self.data)
-        print(self.data)
 
     def parse_data(self):
         ''' Given the selected dataset, load in the data from file
@@ -371,7 +370,9 @@ class build_GA_Menu(Frame):
         self.label_number += 1
         self.labelEntry.delete(0, END)
 
-    # ================== METHODS TO RUN AND TEST ALGORITHMS ============================================================
+    # ===============================================================================================
+    #                     METHODS TO RUN AND TEST ALGORITHMS
+    # ===============================================================================================
 
     def approx_function(self):
         # training_cut = int(0.66*len(self.data))
@@ -481,8 +482,6 @@ class build_GA_Menu(Frame):
             es_instance.evolve(self.training_data)
 
         return best_network, RMSE
-
-
 
     def train_GA(self, ga_instance):
         RMSE = []
@@ -735,21 +734,15 @@ class build_GA_Menu(Frame):
 
     # Method to print the parameters of a given test to the console
     def print_starting_info(self):
-        if self.alg_selection.get() == "Genetic Algorithm":
-            print("Starting training through Genetic Algorithm\n------------------------------------------------")
+        print("Starting training through %s\n------------------------------------------------" % self.alg_selection.get())
 
-            # Print out what was just done:
-            print("Nodes per hidden layer: %s" % self.nodes.get())
-            print("Activation function: %s" % self.actFunc.get())
-            print("Training generations: %s\n" % self.iterations.get())
-
-        if self.alg_selection.get() == "Backpropagation":
-            print("Starting training through Backpropagation\n------------------------------------------------")
-            print("Nodes per hidden layer: %s" % self.nodes.get())
-            print("Activation function: %s" % self.actFunc.get())
-            print("Update method: %s" % self.update_method.get())
-            print("Learning rate: %s" % self.learningRate.get())
-            print("Training iterations: %s\n" % self.iterations.get())
+        # Print out what was just done:
+        print("Activation function: %s" % self.actFunc.get())
+        print("Nodes per hidden layer: %s" % self.nodes.get())
+        print("Activation function: %s" % self.actFunc.get())
+        print("Update method: %s" % self.update_method.get())
+        print("Learning rate: %s" % self.learningRate.get())
+        print("Training iterations/generations: %s\n" % self.iterations.get())
 
 
 if __name__ == '__main__':
