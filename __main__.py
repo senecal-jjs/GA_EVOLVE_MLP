@@ -170,7 +170,7 @@ class build_GA_Menu(Frame):
         self.beta.grid(row=6, column=5)
 
         # lambda for the evolution strategy
-        pop_size_label = Label(self, text=u"Population size (if \u03bc + \u03bb  selected)")
+        pop_size_label = Label(self, text="Population Size")
         pop_size_label.grid(row=7, column=4)
 
         self.pop_size = Entry(self)
@@ -425,7 +425,7 @@ class build_GA_Menu(Frame):
 
     def run_GA(self):
         net_layers = self.get_mlp_layers()
-        ga = Genetic.genetic_algorithm.create_instance(50, net_layers, self.actFunc.get(), self.problem.get())
+        ga = Genetic.genetic_algorithm.create_instance(int(self.pop_size.get()), net_layers, self.actFunc.get(), self.problem.get())
         net_rmse = self.train_GA(ga)
         self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
 
@@ -437,11 +437,10 @@ class build_GA_Menu(Frame):
         self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
 
     def run_diff(self):
-        ''' Given the parameters from the GUI, train the neural network
-            using differential evolution '''
+        # Given the parameters from the GUI, train the neural network using differential evolution
         net_layers = self.get_mlp_layers()
-        beta = 0.5 #Can tune this
-        population_size = self.num_features * 10 #This is tunable
+        beta = 0.5 # Can tune this
+        population_size = self.num_features * 10 # This is tunable
         diff_evol = DiffEvolution.DiffEvolution.create_instance(beta, population_size, net_layers, self.actFunc.get(), self.problem.get())
 
         best_net = self.train_diff_evol(diff_evol)
@@ -464,7 +463,7 @@ class build_GA_Menu(Frame):
                         break
                 elif self.problem.get() == "classification":
                     print("Beginning generation " + str(i) + " of " + self.iterations.get() + "...percent incorrect: " + str(best_rmse))
-                    if best_rmse < 0.05: # 5% incorrect
+                    if best_rmse < 0.05:  # 5% incorrect
                         break
 
                 best_rmse = sys.maxsize
