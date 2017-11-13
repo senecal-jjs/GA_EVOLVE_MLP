@@ -4,6 +4,10 @@ from Darwin import Darwin
 from operator import itemgetter
 from collections import namedtuple
 
+''' The EvolutionStrategy class contains the functionality to train a neural network using an evolution strategy.
+    This class is a child of the Darwin superclass and provides implementations of the evolve, select_parents, 
+    crossover and mutate methods.'''
+
 
 class EvolutionStrategy(Darwin):
     """Population for EvolutionStrategy is different from the superclass:
