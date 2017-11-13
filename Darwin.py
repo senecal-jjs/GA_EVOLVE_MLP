@@ -3,6 +3,8 @@ from operator import itemgetter
 import MLP
 import numpy as np
 
+''' Parent class of Genetic, EvolutionStrategy, and DiffEvolution. Defines the mutate, select_parents, evolve, and 
+    crossover methods. The fitness function is implemented here as well as methods to create a population of networks. '''
 
 class Darwin(ABC):
 	def __init__(self, population_size, nodes_per_layer, activation_function, problem_type):
@@ -46,11 +48,13 @@ class Darwin(ABC):
 		return new
 
 	def fitness(self, individual, validation_data):
-		''' Using 0-1 loss, test the fitness of an individual 
-			in the population '''
+		# Using 0-1 loss for classification, and RMSE for regression, test the fitness of an individual
+	    # in the population
+
 		# Convert the individual to a network
 		net = self.create_mlp(individual)
 
+		# Calculate the average error over the training data
 		summed_error = 0
 		for instance in validation_data:
 			if net.problem_type == "regression":
@@ -66,9 +70,10 @@ class Darwin(ABC):
 
 		return summed_error/len(validation_data)
 
+	# Method to replace the previous generation with a new generation
 	def replace(self, offspring, method, validation_data):
-		''' Given the current population, the offspring, and the 
-			method for replacement, create the new population '''
+		# Given the current population, the offspring, and the
+		# method for replacement, create the new population
 
 		if method == "fittest":
 			#Select the n fittest from both population and offspring
@@ -93,7 +98,7 @@ class Darwin(ABC):
 			pass
 
 	def _create_population(self):
-		''' Create the initial population to be evolved. '''
+		# Create the initial population to be evolved.
 
 		pop = []
 		for i in range(self.population_size):
@@ -108,8 +113,8 @@ class Darwin(ABC):
 		return pop
 
 	def create_mlp(self, individual):
-		''' Using the weights in the population, create an 
-			MLP network to test on '''
+		# Using the weights in the population, create an
+		# MLP network to test on
 
 		net = MLP.network(self.nodes_per_layer, self.activation_function, self.problem_type)
 

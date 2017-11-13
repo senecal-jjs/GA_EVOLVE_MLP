@@ -15,7 +15,7 @@ class EvolutionStrategy(Darwin):
     def create_instance(mu, lamb, nodes_per_layer, actFunc, problem_type):
         obj = EvolutionStrategy(mu, nodes_per_layer, actFunc, problem_type)
         obj.lamb = lamb
-        # for the local varience:
+        # for the local variance:
         # r values chosen based off of Back and Schwefel (1993)
         obj.r1 = 1/math.sqrt(2 * len(obj.population[0]))
         obj.r2 = 1/math.sqrt(2 * math.sqrt(len(obj.population[0])))
@@ -51,18 +51,15 @@ class EvolutionStrategy(Darwin):
         return EvolutionStrategy.Individual(sigmas=new_sigmas, genes=new_genes)
 
     def _pick_top(self, n, canidates, validation_data):
-        # print("Print top")
         pool = []
         for indiv in canidates:
             pool.append( (indiv, self.fitness(indiv, validation_data)) )
-        # print("\n\nThis is the pool:")
-        # print(pool)
         pool.sort(key=itemgetter(1))
         return [ind[0] for ind in pool[:n] ]
 
     def local_es(self, validation_data):
         """ Performs one iteration of the Local variance adaptation variation
-        of the evolution stratagy algorithm
+        of the evolution strategy algorithm
         """
         new_pop = self.population.copy()
         # for indiv in np.random.choice(self.population, self.lamb, replace=True):
@@ -95,7 +92,6 @@ class EvolutionStrategy(Darwin):
         for i in range(num_iterations):
             for ind in self.population:
                 self.evolve()
-
 
     def create_mlp(self, individual):
         return super().create_mlp(individual.genes)
