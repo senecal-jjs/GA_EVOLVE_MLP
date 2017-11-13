@@ -5,16 +5,17 @@ import re
 import numpy as np
 from collections import namedtuple
 import xlsxwriter
-import csv
 import os, errno, getpass # for file writing
 import time
-import Darwin
 import EvolutionStrategy as ES
 import Genetic
 import DiffEvolution
 import MLP
 
 trial_run = namedtuple('trial_run', ['inputs', 'solution'])
+
+''' This class provides the GUI through which the user inputs test parameters. Methods to run each of the 
+    training algorithms, and write test results to a file are also included.'''
 
 
 class build_GA_Menu(Frame):
@@ -195,6 +196,10 @@ class build_GA_Menu(Frame):
         build = Button(self, text="Build and Run!", command=self.approx_function)
         build.grid(row=9, column=5)
 
+    # ==========================================================================================
+    #                  DATA LOAD METHODS
+    # ==========================================================================================
+
     # Using GUI inputs initialize the network structure
     def get_mlp_layers(self):
         nodes_per_layer = self.nodes.get().split(',')
@@ -206,8 +211,9 @@ class build_GA_Menu(Frame):
         layer_structure.append(self.num_classes)
         return layer_structure
 
-    # Load data from UCI repository and convert it to list of tuples(inputs, solution)
+    # Load data directly from UCI repository and convert it to list of tuples(inputs, solution)
     def loadAction(self):
+        # Get data from URL and decode
         url = self.sourceURL.get()
         self.num_classes = len(self.label_dict)
 
@@ -216,6 +222,7 @@ class build_GA_Menu(Frame):
         data = response.data.decode("utf-8")
         data_lines = re.split('\n', data)
 
+        # Parse data
         for i in range(int(self.numInstances.get())):
             data_lines[i] = re.sub("\s+", ",", data_lines[i].strip())
             features_label = re.split('[, \t]', data_lines[i])
@@ -246,9 +253,10 @@ class build_GA_Menu(Frame):
         self.num_classes = len(self.label_dict)
         np.random.shuffle(self.data)
 
+    # Method to load local data files
     def parse_data(self):
-        ''' Given the selected dataset, load in the data from file
-            and select the appropriate problem type '''
+        # Given the selected dataset, load in the data from file
+        # and select the appropriate problem type
 
         if self.data_choice.get() == "Wine":
             self.num_classes = 3
@@ -268,7 +276,6 @@ class build_GA_Menu(Frame):
 
             f.close()
             print("Wine loaded!")
-            #print(self.data)
 
         elif self.data_choice.get() == "Abalone":
             self.num_classes = 29
@@ -303,7 +310,6 @@ class build_GA_Menu(Frame):
 
             f.close()
             print("Abalone loaded!")
-            #print (self.data)
 
         elif self.data_choice.get() == "Concrete Slump":
             self.num_classes = 1
@@ -320,7 +326,6 @@ class build_GA_Menu(Frame):
 
             f.close()
             print("Concrete slump loaded!")
-            #print(self.data)
 
         elif self.data_choice.get() == "Yacht":
             self.num_classes = 1
@@ -337,7 +342,6 @@ class build_GA_Menu(Frame):
 
             f.close()
             print("Yacht loaded!")
-            #print(self.data)
 
         if self.data_choice.get() == "Letter Recognition":
             self.num_classes = 26
@@ -356,11 +360,9 @@ class build_GA_Menu(Frame):
                     self.data.append(trial_run([float(i) for i in temp_line[1:]], label_dict))
             f.close()
             print("Letter recognition loaded!")
-            #print(self.data)
-
 
         np.random.shuffle(self.data)
-        #For large datasets, take a random sample of 1000 instances
+        # For large datasets, take a random sample of 1000 instances
         if len(self.data) > 1000:
             self.data = self.data[0: 1000]
 
@@ -374,17 +376,8 @@ class build_GA_Menu(Frame):
     #                     METHODS TO RUN AND TEST ALGORITHMS
     # ===============================================================================================
 
+    # Run 10-fold cross validation using the training algorithm selected in the GUI
     def approx_function(self):
-        # training_cut = int(0.66*len(self.data))
-        # validation_cut = int(0.8*len(self.data))
-        # self.training_data = self.data[0:training_cut]
-        # self.validation_data = self.data[training_cut:validation_cut]
-        # self.testing_data = self.data[validation_cut:len(self.data)]
-        #
-        # if self.alg_selection.get() == "Backpropagation":
-        #     self.run_backprop()
-        # elif self.alg_selection.get() == "Genetic Algorithm":
-        #     self.run_GA()
         self.data = np.array(self.data)
         data_folds = np.array_split(self.data, 10)
         self.print_starting_info()
@@ -417,18 +410,21 @@ class build_GA_Menu(Frame):
 
         exit()
 
+    # Train network using backpropagation
     def run_backprop(self):
         net_layers = self.get_mlp_layers()
         net = MLP.network(net_layers, self.actFunc.get(), self.problem.get())
         net_rmse = self.train_backprop(net)
         self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
 
+    # Train network using a genetic algorithm
     def run_GA(self):
         net_layers = self.get_mlp_layers()
         ga = Genetic.genetic_algorithm.create_instance(int(self.pop_size.get()), net_layers, self.actFunc.get(), self.problem.get())
         net_rmse = self.train_GA(ga)
         self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
 
+    # Train network using the evolutionary strategy
     def run_ES(self):
         net_layers = self.get_mlp_layers()
         pop_size = int(self.pop_size.get())
@@ -436,6 +432,7 @@ class build_GA_Menu(Frame):
         net_rmse = self.train_ES(es)
         self.test_network(net_rmse[0], rmse_vals=net_rmse[1])
 
+    # Train network using differential evolution
     def run_diff(self):
         # Given the parameters from the GUI, train the neural network using differential evolution
         net_layers = self.get_mlp_layers()
@@ -446,12 +443,12 @@ class build_GA_Menu(Frame):
         best_net = self.train_diff_evol(diff_evol)
         self.test_network(best_net[0], rmse_vals=best_net[1])
 
-
-    # should really be a class method, but my partners don't want to change it:
+    # Method to perform evolutionary strategy training
     def train_ES(self, es_instance):
         RMSE = []
         best_network = object
         best_rmse = 999
+
         # For number of specified generations evolve the network population
         for i in range(int(self.iterations.get())):
             if i % 5 == 0:
@@ -477,11 +474,12 @@ class build_GA_Menu(Frame):
 
                 RMSE.append(best_rmse)
 
-            # GA parameter order: mutation rate, crossover rate, Num individuals for tournament, training data
+            # Evolve the population
             es_instance.evolve(self.training_data)
 
         return best_network, RMSE
 
+    # Method to perform genetic algorithm training
     def train_GA(self, ga_instance):
         RMSE = []
         best_network = object
@@ -517,14 +515,15 @@ class build_GA_Menu(Frame):
 
         return best_network, RMSE
 
+    # Method to perform differential evolution training
     def train_diff_evol(self, de_instance):
         ''' Train the neural net using differential evolution '''
 
         best_rmse = 999
-        best_net = object
+        best_network = object
         rmse_list = []
 
-        #Loop through specified # of generations, or until specific error rate is achieved
+        # Loop through specified # of generations, or until specific error rate is achieved
         for i in range(int(self.iterations.get())):
             if i % 1 == 0:
                 # Calculate the rmse of the fittest individual in the population, and append to list of rmse at each
@@ -623,7 +622,7 @@ class build_GA_Menu(Frame):
     # Method to test the performance of the network on a test data set, after training has completed.
     def test_network(self, net, rmse_vals=None):
         ''' Given the trained net, calculate the output of the net
-            Print the root mean square error to the console by default
+            Print the root mean square error or percent incorrect classifications to the console by default
             If write output is set, create a CSV with the test inputs,
             outputs, and other statistics '''
 
@@ -661,6 +660,7 @@ class build_GA_Menu(Frame):
     def rmse(self, predicted, true):
         return np.sqrt(((np.array(predicted) - np.array(true)) ** 2).mean())
 
+    # Method to calculate 0-1 loss
     def accuracy(self, predicted, true):
         incorrect = 0
         for i in range(len(predicted)):
@@ -671,6 +671,7 @@ class build_GA_Menu(Frame):
 
         return incorrect/len(predicted)
 
+    # Method to write results to file
     def create_csv(self, input_vals, output_vals, true_vals, rmse_vals=None):
         ''' Create a csv file with the test inputs, calculated outputs,
                     true values and relevant statistics. '''
@@ -690,9 +691,6 @@ class build_GA_Menu(Frame):
 
         file_name = os.path.join(folder_dir, user + "_" + self.alg_selection.get() + "_" + time_start + ".xlsx")
         print("Writing output to " + file_name)
-
-        # wrt = csv.writer((open(file_name), "wb"))
-        # wrt.writerow([str(self.label_dict), "Input Values", "Network Output", "True Values", "Validation Error"])
 
         workbook = xlsxwriter.Workbook(file_name)
         worksheet = workbook.add_worksheet()
@@ -748,59 +746,3 @@ if __name__ == '__main__':
     root = Tk()
     app = build_GA_Menu(root)
     root.mainloop()
-
-
-
-    # test = Genetic.genetic_algorithm.create_instance(1000, [2, 5, 1], 'sigmoid', 'regression')
-    #
-    # #Test function x1 + x2
-    # trial_run = namedtuple('trial_run', ['inputs', 'solution'])
-    # data = []
-    # for i in range(500):
-    #     x = np.random.uniform(0, 3)
-    #     y = np.random.uniform(0, 3)
-    #     data.append(trial_run([x,y], x+y))
-    #
-    # test_data = []
-    # for i in range(500):
-    #     x = np.random.uniform(0, 3)
-    #     y = np.random.uniform(0, 3)
-    #     test_data.append(trial_run([x,y], x+y))
-    #
-    # for individual in test.population:
-    #     print(individual)
-    #
-    # print()
-    # print("Evolving")
-    #
-    # for i in range(25):
-    #     if i % 5 == 0:
-    #         print("Generation %s!" % i)
-    #         fitness = []
-    #         for individual in test.population:
-    #             fitness.append(test.fitness(individual[0:-1], test_data))
-    #         print(np.min(fitness))
-    #     #     for i in range(5):
-    #     #         print(test.population[np.random.randint(0, 50)])
-    #     test.evolve(0.3, 0.5, 5, data)
-    #
-    # fitness = []
-    # for individual in test.population:
-    #     fitness.append(test.fitness(individual[0:-1], test_data))
-    #
-    # print(np.min(fitness))
-    #
-    # print()
-    # print("Backprop Result!")
-    # net = MLP.network([2, 5, 1], 'sigmoid', 'regression')
-    #
-    # for i in range(500):
-    #     np.random.shuffle(data)
-    #     net.train_incremental(data, 0.001, use_momentum=False, beta=None)
-    #
-    # summed_error = 0
-    # for instance in test_data:
-    #     network_output = net.calculate_outputs(instance.inputs)
-    #     summed_error += np.sqrt((network_output - instance.solution) ** 2)
-    #
-    # print(summed_error / len(test_data))

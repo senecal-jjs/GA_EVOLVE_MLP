@@ -1,13 +1,13 @@
 from Darwin import Darwin
 import numpy as np
-import MLP
 import random
 
+''' The DiffEvolution class contains the functionality to train a neural network using a differential evolution
+    algorithm. This class is a child of the Darwin superclass and provides implementations of the evolve, select_parents, 
+    crossover and mutate methods.'''
+
+
 class DiffEvolution(Darwin):
-
-	#def __init__(self, beta):
-	#	self.beta = beta
-
 	def create_instance(beta, population_size, nodes_per_layer, activation_function, problem_type):
 		obj = DiffEvolution(population_size, nodes_per_layer, activation_function, problem_type)
 		obj.beta = beta
