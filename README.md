@@ -1,4 +1,4 @@
--# GA_EVOLVE_MLP
+# GA_EVOLVE_MLP
 
 ### Datasets used for this project
 All datasests are taken from the UCI machine learning database
@@ -15,17 +15,17 @@ The user is presented with a GUI consisting of three columns.
             Select type of problem (classification, regression) from second column
             
 2nd Column) Enter required fields to load data directly from the UCI repository
+
              1. -UCI source URL, a URL like the ones shown with the datasets above.
-             
              2. -Class labels, add one label at a time, must match labels in dataset exactly
-             
              3. How many features? The number of features associated with the instances
-             4) How many instances? The number of instances in the dataset
-             5) Problem Type: Drop down menu providing a selection of classification or regression problem
-             6) Label Index: Is the label the first or last value in a dataset instance
-             7) Load!: Load the dataset
+             4. How many instances? The number of instances in the dataset
+             5. Problem Type: Drop down menu providing a selection of classification or regression problem
+             6. Label Index: Is the label the first or last value in a dataset instance
+             7. Load!: Load the dataset
             
 3rd Column) Network and training parameters 
+
              1) Maximum iterations: Maximum number of iterations or generations to run if training does not reach 
                convergence criteria.
              2) Hidden Layer Nodes: The number of nodes to use in the hidden layers. Specified as comma separated values.
