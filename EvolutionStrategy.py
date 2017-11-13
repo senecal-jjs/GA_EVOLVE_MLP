@@ -76,6 +76,8 @@ class EvolutionStrategy(Darwin):
     def global_es(self, validation_data):
         """ Performs one iteration of the global variance adaptation variation
         of the evolution stratagy algorithm
+
+        Not used in this implementation. 
         """
         pass
 
@@ -104,4 +106,4 @@ class EvolutionStrategy(Darwin):
         """ This function is not needed for the current version of the algorithm, and
         will raise an error when called.
         """
-        raise "Don't call this method, silly"
+        raise "Overridden by superclass"
